@@ -7,7 +7,7 @@ import { AuthRequest } from './types';
 
 const app = express();
 app.use(express.json());
-const PORT = 3000;
+const PORT = 8000;
 
 app.get('/hi', (req, res) => {
     res.json({
