@@ -1,7 +1,9 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { signInSchema, signUpSchema } from '@repo/common/schema';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from "@repo/backend-common/config";
+import { userMiddleware } from './middleware';
+import { AuthRequest } from './types';
 
 const app = express();
 app.use(express.json());
@@ -48,8 +50,18 @@ app.post('/signin', (req, res) => {
     })
 });
 
-app.post('/room', (req, res) => {
+app.post('/room', userMiddleware, (req: AuthRequest, res: Response) => {
+    if (!req?.userId) {
+        return res.status(401).json({
+            message: "Unauthorized access"
+        })
+    }
+    const roomId = "abc123";
 
+    return res.status(200).json({
+        success: true,
+        roomId: roomId
+    })
 })
 
 
