@@ -1,10 +1,11 @@
 import express, { Response } from 'express';
-import { signInSchema, signUpSchema } from '@repo/common/schema';
+import { createRoomSchema, signInSchema, signUpSchema } from '@repo/common/schema';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { userMiddleware } from './middleware';
 import { AuthRequest } from './types';
 import { prisma } from '@repo/db';
+import bcrypt from 'bcrypt';
 
 const app = express();
 app.use(express.json());
@@ -16,53 +17,107 @@ app.get('/hi', (req, res) => {
     })
 });
 
-app.post('/signup', (req, res) => {
-    const result = signUpSchema.safeParse(req.body);
-    if (!result.success) {
+app.post('/signup', async (req, res) => {
+    const parsedData = signUpSchema.safeParse(req.body);
+    if (!parsedData.success) {
         return res.status(404).json({
             message: "Invalid Input data"
         })
     }
+    try {
+        const hashedPassword = await bcrypt.hash(parsedData.data.password, 10);
 
-    return res.status(200).json({
-        success: true,
-        message: "You are signed up!!"
-    })
+        await prisma.user.create({
+            data: {
+                name: parsedData.data.name,
+                email: parsedData.data.email,
+                password: hashedPassword,
+            }
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "User signed up!!"
+        })
+    } catch (error) {
+        return res.status(409).json({
+            success: false,
+            message: 'Duplicate user entry'
+        });
+    }
 });
 
 
-app.post('/signin', (req, res) => {
-    const result = signInSchema.safeParse(req.body);
-    if (!result.success) {
-        return res.status(404).json({
+app.post('/signin', async (req, res) => {
+    const parsedData = signInSchema.safeParse(req.body);
+    if (!parsedData.success) {
+        return res.status(400).json({
             message: "Invalid Input data"
         })
     }
 
-    // DB call to get user Id
-    const userId = 1;
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                email: parsedData.data.email
+            }
+        });
 
-    const token = jwt.sign({ userId }, JWT_SECRET);
+        if (!user || !(await bcrypt.compare(parsedData.data.password, user.password))) {
+            return res.status(401).json({
+                error: "Invalid credentials"
+            })
+        }
 
-    return res.status(200).json({
-        success: true,
-        token: token,
-        message: "You are signed in"
-    })
+        const userId = user.id;
+        const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+
+        return res.status(200).json({
+            success: true,
+            token: token,
+            message: "User signin successfully"
+        })
+    } catch (error) {
+        return res.status(500).json({
+            error: "Internal Server error"
+        });
+    }
 });
 
-app.post('/room', userMiddleware, (req: AuthRequest, res: Response) => {
-    if (!req?.userId) {
+app.post('/room', userMiddleware, async (req: AuthRequest, res: Response) => {
+    const parsedData = createRoomSchema.safeParse(req.body);
+    if (!parsedData.success) {
+        return res.status(400).json({
+            error: 'Incorrect Input for room name'
+        })
+    }
+    const userId = req.userId;
+
+    if (!userId) {
         return res.status(401).json({
             message: "Unauthorized access"
         })
     }
-    const roomId = "abc123";
 
-    return res.status(200).json({
-        success: true,
-        roomId: roomId
-    })
+    try {
+        const room = await prisma.room.create({
+            data: {
+                adminId: userId,
+                slug: parsedData.data.name
+            }
+        })
+        const roomId = room.id;
+
+        return res.status(200).json({
+            success: true,
+            roomId: roomId,
+            message: "Room created successfully"
+        })
+    } catch (error) {
+        return res.status(500).json({
+            error: "Intr=ernal server error"
+        })
+    }
 })
 
 
