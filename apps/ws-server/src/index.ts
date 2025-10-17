@@ -1,6 +1,8 @@
 import { WebSocketServer, WebSocket } from "ws";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
+import { prisma } from "@repo/db";
+
 const wss = new WebSocketServer({ port: 8080 });
 
 interface User {
@@ -52,7 +54,7 @@ wss.on('connection', (socket, req) => {
         rooms: []
     })
 
-    socket.on('message', (message) => {
+    socket.on('message', async (message) => {
         const parsedData = JSON.parse(message as unknown as string);
 
         // TODO: Does this roomID exists in db 
@@ -62,7 +64,7 @@ wss.on('connection', (socket, req) => {
             if (!user) {
                 return;
             }
-            const roomId = String(parsedData.roomId);
+            const roomId = parsedData.roomId;
             if (!user.rooms.includes(roomId)) {
                 user.rooms.push(roomId);
                 console.log(`${user.userId} joins the room ${roomId}`);
@@ -72,7 +74,7 @@ wss.on('connection', (socket, req) => {
         if (parsedData.type === "leave_room") {
             const user = users.find(x => x.socket === socket);
             if (!user) return null;
-            user.rooms = user?.rooms.filter(room => room !== String(parsedData.roomId));
+            user.rooms = user?.rooms.filter(room => room !== parsedData.roomId);
             console.log(`${user.userId} left room ${parsedData.roomId}`)
         }
 
@@ -82,12 +84,20 @@ wss.on('connection', (socket, req) => {
             const roomId = parsedData.roomId;
             const message = parsedData.message;
 
-            console.log(`Message to ${roomId} is ${message}`)
+            await prisma.chat.create({
+                data: {
+                    roomId,
+                    userId,
+                    message
+                }
+            })
+
+            console.log(`Message to room ${roomId} is ${message}`)
 
             users.forEach(user => {
                 if (user.rooms.includes(roomId)) {
                     user.socket.send(JSON.stringify({
-                        type: 'chat',
+                        type: "chat",
                         message: message,
                         roomId
                     }))
