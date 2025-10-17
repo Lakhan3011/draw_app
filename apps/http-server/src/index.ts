@@ -120,6 +120,29 @@ app.post('/room', userMiddleware, async (req: AuthRequest, res: Response) => {
     }
 })
 
+app.get('/chats/:roomId', async (req, res) => {
+    const roomId = Number(req.params.roomId);
+
+    try {
+        const chats = await prisma.chat.findMany({
+            where: {
+                roomId
+            },
+            take: 50,
+            orderBy: {
+                message: 'desc'
+            }
+        })
+
+        return res.status(200).json({
+            success: true,
+            chats: chats
+        })
+    } catch (error: any) {
+        console.log('Error in fetching chats: ', error.message)
+    }
+})
+
 
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`)
