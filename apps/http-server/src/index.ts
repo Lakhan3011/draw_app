@@ -114,8 +114,8 @@ app.post('/room', userMiddleware, async (req: AuthRequest, res: Response) => {
             message: "Room created successfully"
         })
     } catch (error) {
-        return res.status(500).json({
-            error: "Intr=ernal server error"
+        return res.status(411).json({
+            error: "Room already exist with this name"
         })
     }
 })
