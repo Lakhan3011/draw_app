@@ -108,22 +108,22 @@ wss.on('connection', (socket, req) => {
             )
 
             // Notify to others
-            broadcast(currentRoom, JSON.stringify({
+            broadcast(currentRoom, {
                 type: "system",
                 message: `${userId} joined room ${currentRoom}`,
                 users: getUserCount(currentRoom)
-            }))
+            })
         }
 
         if (parsedData.type === "leave") {
             if (!currentUser) { return };
             leaveRoom(currentRoom, currentUser);
 
-            broadcast(currentRoom, JSON.stringify({
+            broadcast(currentRoom, {
                 type: "system",
                 message: `${currentUser.userId} has left the room ${currentRoom}`,
                 users: getUserCount(currentRoom)
-            }))
+            })
         }
 
 
