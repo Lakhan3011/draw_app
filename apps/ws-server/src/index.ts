@@ -7,11 +7,46 @@ const wss = new WebSocketServer({ port: 8080 });
 
 interface User {
     socket: WebSocket,
-    rooms: string[],
+    // rooms: string[],
     userId: string
 }
 
-const users: User[] = [];
+const rooms = new Map<string, Set<User>>();
+
+// const users: User[] = [];
+
+function joinRoom(roomId: string, user: User) {
+    if (!rooms.has(roomId)) {
+        rooms.set(roomId, new Set());
+    };
+    rooms.get(roomId)!.add(user);
+}
+
+function leaveRoom(roomId: string, user: User) {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    room.delete(user);
+
+    if (room.size === 0) {
+        rooms.delete(roomId);
+    }
+}
+
+function broadcast(roomId: string, message: any) {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    for (const user of room) {
+        if (user.socket.readyState === WebSocket.OPEN) {
+            user.socket.send(JSON.stringify(message));
+        }
+    }
+}
+
+function getUserCount(roomId: string) {
+    return rooms.get(roomId)?.size || 0;
+}
 
 function checkUser(token: string): string | null {
     try {
@@ -48,61 +83,69 @@ wss.on('connection', (socket, req) => {
         return;
     }
 
-    users.push({
-        userId,
-        socket,
-        rooms: []
-    })
+
+    let currentRoom: string = "";
+    let currentUser: User | null = null;
 
     socket.on('message', async (message) => {
-        const parsedData = JSON.parse(message as unknown as string);
+        const parsedData = JSON.parse(message.toString());
 
         // TODO: Does this roomID exists in db 
         // Does this person has access to join this specific room
-        if (parsedData.type === "join_room") {
-            const user = users.find(x => x.socket === socket);
-            if (!user) {
-                return;
-            }
-            const roomId = parsedData.roomId;
-            if (!user.rooms.includes(roomId)) {
-                user.rooms.push(roomId);
-                console.log(`${user.userId} joins the room ${roomId}`);
-            }
+        if (parsedData.type === "join") {
+            currentRoom = parsedData.roomId;
+            currentUser = { socket, userId };
+
+            joinRoom(currentRoom, currentUser);
+
+            // Notify to new user
+            socket.send(
+                JSON.stringify({
+                    type: "system",
+                    message: `Welcome ${userId}, you joined room ${currentRoom}`,
+                    users: getUserCount(currentRoom)
+                })
+            )
+
+            // Notify to others
+            broadcast(currentRoom, JSON.stringify({
+                type: "system",
+                message: `${userId} joined room ${currentRoom}`,
+                users: getUserCount(currentRoom)
+            }))
         }
 
-        if (parsedData.type === "leave_room") {
-            const user = users.find(x => x.socket === socket);
-            if (!user) return null;
-            user.rooms = user?.rooms.filter(room => room !== parsedData.roomId);
-            console.log(`${user.userId} left room ${parsedData.roomId}`)
+        if (parsedData.type === "leave") {
+            if (!currentUser) { return };
+            leaveRoom(currentRoom, currentUser);
+
+            broadcast(currentRoom, JSON.stringify({
+                type: "system",
+                message: `${currentUser.userId} has left the room ${currentRoom}`,
+                users: getUserCount(currentRoom)
+            }))
         }
+
 
         // TODO: Rate limit msg not too long
         // Auth: now anyone sends msg to any room, if one subs to room1, he mays sends msg to room2
-        if (parsedData.type === "chat") {
-            const roomId = parsedData.roomId;
-            const message = parsedData.message;
+        if (parsedData.type === "chat" && currentRoom && currentUser) {
+            const msg = {
+                type: "chat",
+                room: currentRoom,
+                user: currentUser.userId,
+                message: parsedData.message,
+            };
 
             await prisma.chat.create({
                 data: {
-                    roomId,
-                    userId,
-                    message
+                    roomId: Number(currentRoom),
+                    userId: currentUser.userId,
+                    message: parsedData.message
                 }
             })
 
-            console.log(`Message to room ${roomId} is ${message}`)
-
-            users.forEach(user => {
-                if (user.rooms.includes(roomId)) {
-                    user.socket.send(JSON.stringify({
-                        type: "chat",
-                        message: message,
-                        roomId
-                    }))
-                }
-            })
+            broadcast(currentRoom, msg);
         }
     })
 })
