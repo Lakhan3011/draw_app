@@ -143,6 +143,27 @@ app.get('/chats/:roomId', async (req, res) => {
     }
 })
 
+app.get('/room/:slug', async (req, res) => {
+    try {
+        const slug = req.params.slug;
+        const room = await prisma.room.findUnique({
+            where: {
+                slug
+            }
+        })
+
+        return res.status(200).json({
+            success: true,
+            roomId: room?.id
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Internal server error"
+        })
+    }
+})
+
 
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`)
