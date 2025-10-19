@@ -1,7 +1,6 @@
 {
   "name": "@repo/tailwind-config",
   "version": "1.0.0",
-  "type": "module",
   "main": "index.js",
   "exports": {
     ".": "./shared-styles.css",
@@ -14,8 +13,7 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "@tailwindcss/postcss": "^4.1.14",
+  "devDependencies": {
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.14"
   }
