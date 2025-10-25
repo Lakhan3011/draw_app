@@ -68,7 +68,7 @@ function checkUser(token: string): string | null {
 
 
 wss.on('connection', (socket, req) => {
-    console.log('Client connected');
+    // console.log('Client connected');
     const url = req.url;
     if (!url) {
         return null;
@@ -126,6 +126,8 @@ wss.on('connection', (socket, req) => {
             })
         }
 
+        // console.log('message recieved');
+        // console.log(parsedData);
 
         // TODO: Rate limit msg not too long
         // Auth: now anyone sends msg to any room, if one subs to room1, he mays sends msg to room2

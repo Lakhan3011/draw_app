@@ -1,3 +1,7 @@
+import axios from "axios";
+import { BACKEND_URL } from "../app/config/config";
+import { parse } from "path";
+
 type Shape = {
     type: "rect";
     x: number;
@@ -11,16 +15,27 @@ type Shape = {
     radius: number;
 }
 
-export function initRect(canvas: HTMLCanvasElement) {
+export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
 
-    let existingShapes: Shape[] = [];
+    let existingShapes: Shape[] = await getExistingShapes(roomId);
+    // console.log('existing shape: ', existingShapes);
 
     const ctx = canvas.getContext('2d');
     if (!ctx) { return; }
 
+    socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        // If I'm drawing my self and someone added the shape, than my shape go away , I have to re-move the mouse
+        if (message.type === "chat") {
+            const parsedShape = JSON.parse(message.message);
+            // console.log(parsedShape);
+            existingShapes.push(parsedShape.shape);
+            clearCanvas(existingShapes, canvas, ctx);
+        }
+    }
+
     // Bydefault: rect is black
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    clearCanvas(existingShapes, canvas, ctx);
 
     let startX = 0;
     let startY = 0;
@@ -36,13 +51,21 @@ export function initRect(canvas: HTMLCanvasElement) {
         clicked = false;
         const width = e.clientX - startX;
         const height = e.clientY - startY;
-        existingShapes.push({
+
+        const shape: Shape = {
             type: "rect",
             x: startX,
             y: startY,
             width,
             height
-        })
+        }
+
+        existingShapes.push(shape);
+        socket.send(JSON.stringify({
+            type: "chat",
+            message: JSON.stringify({ shape }),
+            roomId
+        }))
     })
 
     canvas.addEventListener('mousemove', (e) => {
@@ -70,4 +93,17 @@ function clearCanvas(existingShapes: Shape[], canvas: HTMLCanvasElement, ctx: Ca
 }
 
 
-// Infinite scrolling
+// TODO: Infinite scrolling
+
+async function getExistingShapes(roomId: string) {
+    const res = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
+    const messages = res.data.chats;
+
+    const shapes = messages.map((x: { message: string }) => {
+        const messageData = JSON.parse(x.message);
+        // console.log('MESSAGE DATA IS: ', messageData.shape);
+        return messageData.shape;
+    });
+
+    return shapes;
+}
