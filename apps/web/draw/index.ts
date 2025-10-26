@@ -9,13 +9,21 @@ type Shape = {
     width: number;
     height: number;
 } | {
-    type: "cricle";
+    type: "circle";
     centreX: number;
     centreY: number;
     radius: number;
+} | {
+    type: "line";
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
 }
 
-export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
+type ToolType = "rect" | "circle" | "line";
+
+export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, currentTool: ToolType) {
 
     let existingShapes: Shape[] = await getExistingShapes(roomId);
     // console.log('existing shape: ', existingShapes);
@@ -23,9 +31,10 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
     const ctx = canvas.getContext('2d');
     if (!ctx) { return; }
 
+    // Message event handler
     socket.onmessage = (event) => {
         const message = JSON.parse(event.data);
-        // If I'm drawing my self and someone added the shape, than my shape go away , I have to re-move the mouse
+        //TODO:  If I'm drawing my self and someone added the shape, than my shape go away , I have to re-move the mouse
         if (message.type === "chat") {
             const parsedShape = JSON.parse(message.message);
             // console.log(parsedShape);
