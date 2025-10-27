@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { initDraw } from "../../draw";
+import { IconButton } from "./IconButton";
+import { Circle, Icon, Pencil, RectangleHorizontal } from "lucide-react";
 
 type ShapeType = "rect" | "circle" | "line";
 
@@ -7,37 +9,69 @@ export function Canvas({ roomId, socket }: {
     roomId: string;
     socket: WebSocket
 }) {
-
-    const [tool, setTool] = useState<ShapeType>('rect');
     const canvasRef = useRef<HTMLCanvasElement>(null);
-
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [selectedTool, setSelectedTool] = useState<ShapeType>('rect');
+    const [canvasSize, setCanvasSize] = useState({
+        width: 0,
+        height: 0
+    });
 
     useEffect(() => {
-        if (canvasRef.current) {
-            initDraw(canvasRef.current, roomId, socket, tool);
+        const updateCanvasSize = () => {
+            if (containerRef.current) {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                setCanvasSize({ width, height });
+            }
+        };
+
+        // Initial default size
+        updateCanvasSize();
+
+        window.addEventListener('resize', updateCanvasSize);
+
+        return () => {
+            window.removeEventListener('resize', updateCanvasSize);
         }
-    }, [canvasRef, tool]);
+
+    }, []);
+
+    useEffect(() => {
+        if (canvasRef.current && canvasSize.width > 0) {
+            initDraw(canvasRef.current, roomId, socket, selectedTool);
+        }
+    }, [canvasRef, selectedTool, socket, roomId, canvasSize]);
 
     return (
-        <div>
-            <canvas ref={canvasRef} width={2000} height={1000}></canvas>
-            <div className="flex justify-center gap-4 p-2">
-                <button
-                    onClick={() => setTool("rect")}
-                    className={`p-2 rounded cursor-pointer ${tool === "rect" ? "bg-red-600 ring-2 ring-black" : "bg-red-400"}`}>
-                    Rect
-                </button>
-                <button
-                    onClick={() => setTool("circle")}
-                    className={`p-2 rounded cursor-pointer ${tool === "circle" ? "bg-blue-600 ring-2 ring-black" : "bg-blue-400"}`}>
-                    Circle
-                </button>
-                <button
-                    onClick={() => setTool("line")}
-                    className={`p-2 rounded cursor-pointer ${tool === "line" ? "bg-gray-600 ring-2 ring-black" : "bg-gray-400"}`}>
-                    line
-                </button>
-            </div>
+        <div ref={containerRef} className="h-screen">
+            <canvas ref={canvasRef} width={canvasSize.width} height={canvasSize.height}></canvas>
+            <TopBar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
+        </div>
+    )
+}
+
+function TopBar({ selectedTool, setSelectedTool }: {
+    selectedTool: ShapeType,
+    setSelectedTool: (s: ShapeType) => void
+}) {
+    return (
+        <div className="fixed top-3 right-1 flex flex-col p-2 gap-3 rounded-lg bg-gray-800">
+            <IconButton
+                activated={selectedTool === "line"}
+                icon={<Pencil />}
+                onClick={() => { setSelectedTool("line") }}
+            />
+            <IconButton
+                activated={selectedTool === "rect"}
+                icon={<RectangleHorizontal />}
+                onClick={() => { setSelectedTool("rect") }}
+            />
+            <IconButton
+                activated={selectedTool === "circle"}
+                icon={<Circle />}
+                onClick={() => { setSelectedTool("circle") }}
+            />
         </div>
     )
 }

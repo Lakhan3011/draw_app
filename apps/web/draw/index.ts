@@ -1,6 +1,5 @@
 import axios from "axios";
 import { BACKEND_URL } from "../app/config/config";
-import { parse } from "path";
 
 type Shape = {
     type: "rect";

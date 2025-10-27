@@ -72,7 +72,7 @@ app.post('/signin', async (req, res) => {
         }
 
         const userId = user.id;
-        const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '10h' });
+        const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '24h' });
 
         return res.status(200).json({
             success: true,
@@ -130,7 +130,7 @@ app.get('/chats/:roomId', async (req, res) => {
             where: {
                 roomId
             },
-            take: 50,
+            take: 1000,
             orderBy: {
                 message: 'desc'
             }
