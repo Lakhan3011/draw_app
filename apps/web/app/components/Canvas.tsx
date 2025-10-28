@@ -38,10 +38,14 @@ export function Canvas({ roomId, socket }: {
     }, []);
 
     useEffect(() => {
+
         if (canvasRef.current && canvasSize.width > 0) {
-            initDraw(canvasRef.current, roomId, socket, selectedTool);
+            const cleanup = initDraw(canvasRef.current, roomId, socket, selectedTool);
+            return () => {
+                if (cleanup) cleanup();
+            };
         }
-    }, [canvasRef, selectedTool, socket, roomId, canvasSize]);
+    }, [selectedTool, socket, roomId, canvasSize.width, canvasSize.height]);
 
     return (
         <div ref={containerRef} className="h-screen">

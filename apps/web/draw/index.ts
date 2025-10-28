@@ -22,16 +22,21 @@ type Shape = {
 
 type ToolType = "rect" | "circle" | "line";
 
-export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, currentTool: ToolType) {
+export function initDraw(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket, currentTool: ToolType) {
 
-    let existingShapes: Shape[] = await getExistingShapes(roomId);
+    let existingShapes: Shape[] = [];
+    getExistingShapes(roomId).then((shapes) => {
+        existingShapes = shapes;
+        const ctx = canvas.getContext('2d');
+        clearCanvas(existingShapes, canvas, ctx!);
+    });
     // console.log('existing shape: ', existingShapes);
 
     const ctx = canvas.getContext('2d');
     if (!ctx) { return; }
 
     // Message event handler
-    socket.onmessage = (event) => {
+    const onMessage = (event: MessageEvent) => {
         const message = JSON.parse(event.data);
         //TODO:  If I'm drawing my self and someone added the shape, than my shape go away , I have to re-move the mouse
         if (message.type === "chat") {
@@ -42,6 +47,8 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
         }
     }
 
+    socket.addEventListener('message', onMessage);
+
     // Bydefault: rect is black
     clearCanvas(existingShapes, canvas, ctx);
 
@@ -49,23 +56,52 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
     let startY = 0;
     let clicked = false;
 
-    canvas.addEventListener('mousedown', (e) => {
+    const onMouseDown = (e: MouseEvent) => {
         clicked = true;
-        startX = e.clientX;
-        startY = e.clientY;
-    })
+        const rect = canvas.getBoundingClientRect();
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+    }
 
-    canvas.addEventListener('mouseup', (e) => {
+    const onMouseUp = (e: MouseEvent) => {
         clicked = false;
-        const width = e.clientX - startX;
-        const height = e.clientY - startY;
+        const rect = canvas.getBoundingClientRect();
+        const endX = e.clientX - rect.left;
+        const endY = e.clientY - rect.top;
 
-        const shape: Shape = {
-            type: "rect",
-            x: startX,
-            y: startY,
-            width,
-            height
+        let shape: Shape;
+
+        // create shape based on selection tool
+        switch (currentTool) {
+            case 'rect':
+                shape = {
+                    type: "rect",
+                    x: startX,
+                    y: startY,
+                    width: endX - startX,
+                    height: endY - startY
+                };
+                break;
+
+            case "circle":
+                const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+                shape = {
+                    type: "circle",
+                    radius,
+                    centreX: startX,
+                    centreY: startY
+                };
+                break;
+
+            case "line":
+                shape = {
+                    type: "line",
+                    startX,
+                    startY,
+                    endX,
+                    endY
+                }
+                break;
         }
 
         existingShapes.push(shape);
@@ -74,28 +110,77 @@ export async function initDraw(canvas: HTMLCanvasElement, roomId: string, socket
             message: JSON.stringify({ shape }),
             roomId
         }))
-    })
+    };
 
-    canvas.addEventListener('mousemove', (e) => {
+    const onMouseMove = (e: MouseEvent) => {
         if (clicked) {
-            const width = e.clientX - startX;
-            const height = e.clientY - startY;
+            const rect = canvas.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
             clearCanvas(existingShapes, canvas, ctx);
             ctx.strokeStyle = "rgba(255,255,255)";
-            ctx.strokeRect(startX, startY, width, height);
+            ctx.lineWidth = 2;
+
+            // shape preview 
+            switch (currentTool) {
+                case "rect":
+                    ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
+                    break;
+
+                case "circle":
+                    const radius = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
+                    ctx.beginPath();
+                    ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+
+                case "line":
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(currentX, currentY);
+                    ctx.stroke();
+                    break;
+            }
         }
-    })
+    }
+
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mousemove', onMouseMove);
+
+    return () => {
+        canvas.removeEventListener('mousedown', onMouseDown);
+        canvas.removeEventListener('mouseup', onMouseUp);
+        canvas.removeEventListener('mousedown', onMouseMove);
+        socket.removeEventListener('message', onMessage);
+    }
 }
+
+
 
 function clearCanvas(existingShapes: Shape[], canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    existingShapes.map((shape) => {
+
+    existingShapes.forEach((shape) => {
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+
         if (shape.type === "rect") {
-            ctx.strokeStyle = "white";
             ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+        }
+        else if (shape.type === "circle") {
+            ctx.beginPath();
+            ctx.arc(shape.centreX, shape.centreY, shape.radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        else if (shape.type === "line") {
+            ctx.beginPath();
+            ctx.moveTo(shape.startX, shape.startY);
+            ctx.lineTo(shape.endX, shape.endY);
+            ctx.stroke();
         }
     })
 }
