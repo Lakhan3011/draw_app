@@ -65,7 +65,7 @@ export function Canvas({ roomId, socket }: {
         if (canvasRef.current && canvasSize.width > 0) {
             const cleanup = initDraw(canvasRef.current, roomId, socket, selectedTool);
             return () => {
-                if (cleanup) cleanup();
+                if (cleanup) { cleanup(); }
             };
         }
     }, [selectedTool, socket, roomId, canvasSize.width, canvasSize.height]);
@@ -137,13 +137,13 @@ export function Canvas({ roomId, socket }: {
                 ref={canvasRef}
                 width={canvasSize.width}
                 height={canvasSize.height}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onWheel={handleMouseWheel}
-                onContextMenu={handleContextMenu}
-                className={`${isPanning ? 'cursor-grabbing' : 'cursor-crosshair'}`}
+            // onMouseDown={handleMouseDown}
+            // onMouseMove={handleMouseMove}
+            // onMouseUp={handleMouseUp}
+            // onMouseLeave={handleMouseUp}
+            // onWheel={handleMouseWheel}
+            // onContextMenu={handleContextMenu}
+            // className={`${isPanning ? 'cursor-grabbing' : 'cursor-crosshair'}`}
             />
             <TopBar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
         </div>
