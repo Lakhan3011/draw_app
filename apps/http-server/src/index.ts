@@ -72,7 +72,7 @@ app.post('/signin', async (req, res) => {
         }
 
         const userId = user.id;
-        const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign({ userId }, JWT_SECRET);
 
         return res.status(200).json({
             success: true,

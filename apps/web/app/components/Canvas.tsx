@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { initDraw } from "../../draw";
 import { IconButton } from "./IconButton";
-import { Circle, Icon, Pencil, RectangleHorizontal } from "lucide-react";
+import { Circle, HandFist, HandGrab, Icon, Pen, Pencil, RectangleHorizontal } from "lucide-react";
 
-type ShapeType = "rect" | "circle" | "line";
+type ShapeType = "rect" | "circle" | "line" | "hand";
 
 interface Viewport {
     offsetX: number;
@@ -137,13 +137,14 @@ export function Canvas({ roomId, socket }: {
                 ref={canvasRef}
                 width={canvasSize.width}
                 height={canvasSize.height}
-            // onMouseDown={handleMouseDown}
-            // onMouseMove={handleMouseMove}
-            // onMouseUp={handleMouseUp}
-            // onMouseLeave={handleMouseUp}
-            // onWheel={handleMouseWheel}
-            // onContextMenu={handleContextMenu}
-            // className={`${isPanning ? 'cursor-grabbing' : 'cursor-crosshair'}`}
+                // onMouseDown={handleMouseDown}
+                // onMouseMove={handleMouseMove}
+                // onMouseUp={handleMouseUp}
+                // onMouseLeave={handleMouseUp}
+                // onWheel={handleMouseWheel}
+                // onContextMenu={handleContextMenu}
+                // className={`${isPanning ? 'cursor-grabbing' : 'cursor-crosshair'}`}
+                className={`${selectedTool === "hand" ? 'cursor-grabbing' : 'cursor-crosshair'}`}
             />
             <TopBar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
         </div>
@@ -170,6 +171,11 @@ function TopBar({ selectedTool, setSelectedTool }: {
                 activated={selectedTool === "circle"}
                 icon={<Circle />}
                 onClick={() => { setSelectedTool("circle") }}
+            />
+            <IconButton
+                activated={selectedTool === "hand"}
+                icon={<HandGrab />}
+                onClick={() => setSelectedTool("hand")}
             />
         </div>
     )
