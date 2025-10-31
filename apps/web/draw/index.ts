@@ -135,52 +135,7 @@ export function initDraw(
 
         isDrawing = false;
         drawingShape = null;
-        // const rect = canvas.getBoundingClientRect();
-        // const px = e.clientX - rect.left;
-        // const py = e.clientY - rect.top;
-        // const { x: endX, y: endY } = screenToWorld(px, py, viewport);
 
-        // let shape: Shape;
-
-        // // create shape based on selection tool
-        // switch (currentTool) {
-        //     case 'rect':
-        //         shape = {
-        //             type: "rect",
-        //             x: startX,
-        //             y: startY,
-        //             width: endX - startX,
-        //             height: endY - startY
-        //         };
-        //         break;
-
-        //     case "circle":
-        //         const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-        //         shape = {
-        //             type: "circle",
-        //             radius,
-        //             centreX: startX,
-        //             centreY: startY
-        //         };
-        //         break;
-
-        //     case "line":
-        //         shape = {
-        //             type: "line",
-        //             startX,
-        //             startY,
-        //             endX,
-        //             endY
-        //         }
-        //         break;
-        // }
-
-        // existingShapes.push(shape);
-        // socket.send(JSON.stringify({
-        //     type: "chat",
-        //     message: JSON.stringify({ shape }),
-        //     roomId
-        // }))
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -198,22 +153,12 @@ export function initDraw(
             return;
         }
 
-
         if (isDrawing) {
             const { x: currentX, y: currentY } = screenToWorld(screenX, screenY, viewport);
-
-            // clearCanvas(existingShapes, canvas, ctx, viewport);
-
-            // draw preview using world coords - set transform once across all shapes
-            // ctx.save();
-            // ctx.setTransform(viewport.zoom, 0, 0, viewport.zoom, viewport.offsetX, viewport.offsetY);
-            // ctx.strokeStyle = "rgba(255,255,255, 0.8)";
-            // ctx.lineWidth = 2 / viewport.zoom;
 
             // shape preview 
             switch (currentTool) {
                 case "rect":
-                    //ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
                     drawingShape = {
                         type: "rect",
                         x: startX,
@@ -225,9 +170,6 @@ export function initDraw(
 
                 case "circle":
                     const radius = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
-                    // ctx.beginPath();
-                    // ctx.arc(startX, startY, radius, 0, Math.PI * 2);
-                    // ctx.stroke();
                     drawingShape = {
                         type: "circle",
                         centreX: startX,
@@ -237,10 +179,6 @@ export function initDraw(
                     break;
 
                 case "line":
-                    // ctx.beginPath();
-                    // ctx.moveTo(startX, startY);
-                    // ctx.lineTo(currentX, currentY);
-                    // ctx.stroke();
                     drawingShape = {
                         type: "line",
                         startX,
@@ -250,10 +188,8 @@ export function initDraw(
                     }
                     break;
             }
-            // ctx.restore();
         }
     };
-
 
     // zoom handler
     const onWheel = (e: WheelEvent) => {
@@ -327,7 +263,6 @@ export function initDraw(
 // Helper functions
 
 function drawShape(shape: Shape, ctx: CanvasRenderingContext2D, viewport: Viewport) {
-
     // draw shape preview
     ctx.strokeStyle = "white";
     ctx.lineWidth = 2 / viewport.zoom;  // for stable width
@@ -353,47 +288,45 @@ function drawShape(shape: Shape, ctx: CanvasRenderingContext2D, viewport: Viewpo
 }
 
 
-function clearCanvas(existingShapes: Shape[], canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, viewport: Viewport) {
-    // clean in device pixels
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+// function clearCanvas(existingShapes: Shape[], canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, viewport: Viewport) {
+//     // clean in device pixels
+//     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // draw black background in screen pixels
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
+//     // draw black background in screen pixels
+//     ctx.save();
+//     ctx.setTransform(1, 0, 0, 1, 0, 0);
+//     ctx.fillStyle = "black";
+//     ctx.fillRect(0, 0, canvas.width, canvas.height);
+//     ctx.restore();
 
-    // apply world transform
-    ctx.save();
-    ctx.setTransform(viewport.zoom, 0, 0, viewport.zoom, viewport.offsetX, viewport.offsetY);
-
-
-    // draw all the shapes
-    existingShapes.forEach((shape) => {
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2 / viewport.zoom;  // for stable width
-
-        if (shape.type === "rect") {
-            ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-        }
-        else if (shape.type === "circle") {
-            ctx.beginPath();
-            ctx.arc(shape.centreX, shape.centreY, shape.radius, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-        else if (shape.type === "line") {
-            ctx.beginPath();
-            ctx.moveTo(shape.startX, shape.startY);
-            ctx.lineTo(shape.endX, shape.endY);
-            ctx.stroke();
-        }
-    });
-
-    ctx.restore();
-}
+//     // apply world transform
+//     ctx.save();
+//     ctx.setTransform(viewport.zoom, 0, 0, viewport.zoom, viewport.offsetX, viewport.offsetY);
 
 
+//     // draw all the shapes
+//     existingShapes.forEach((shape) => {
+//         ctx.strokeStyle = "white";
+//         ctx.lineWidth = 2 / viewport.zoom;  // for stable width
+
+//         if (shape.type === "rect") {
+//             ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+//         }
+//         else if (shape.type === "circle") {
+//             ctx.beginPath();
+//             ctx.arc(shape.centreX, shape.centreY, shape.radius, 0, Math.PI * 2);
+//             ctx.stroke();
+//         }
+//         else if (shape.type === "line") {
+//             ctx.beginPath();
+//             ctx.moveTo(shape.startX, shape.startY);
+//             ctx.lineTo(shape.endX, shape.endY);
+//             ctx.stroke();
+//         }
+//     });
+
+//     ctx.restore();
+// }
 
 async function getExistingShapes(roomId: string) {
     const res = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
