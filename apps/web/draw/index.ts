@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BACKEND_URL } from "../app/config/config";
+import { start } from "repl";
 
 type Shape = {
     type: "rect";
@@ -63,6 +64,14 @@ export function initDraw(
         offsetY: 0,
         zoom: 1
     };
+
+    // Default mouse state that tracks mouse position in screen and world coordinates
+    const mouse = {
+        screenX: 0,
+        screenY: 0,
+        worldX: 0,
+        worldY: 0
+    }
 
     // Default pan state
     let isPanning = false;
@@ -135,13 +144,17 @@ export function initDraw(
 
         isDrawing = false;
         drawingShape = null;
-
     };
 
     const onMouseMove = (e: MouseEvent) => {
         const rect = canvas.getBoundingClientRect();
-        const screenX = e.clientX - rect.left;
-        const screenY = e.clientY - rect.top;
+
+        // update mouse position (screen + world)
+        mouse.screenX = e.clientX - rect.left;
+        mouse.screenY = e.clientY - rect.top;
+        const { x, y } = screenToWorld(mouse.screenX, mouse.screenY, viewport);
+        mouse.worldX = x;
+        mouse.worldY = y;
 
         if (isPanning) {
             const dx = e.clientX - panStart.x;
@@ -153,42 +166,6 @@ export function initDraw(
             return;
         }
 
-        if (isDrawing) {
-            const { x: currentX, y: currentY } = screenToWorld(screenX, screenY, viewport);
-
-            // shape preview 
-            switch (currentTool) {
-                case "rect":
-                    drawingShape = {
-                        type: "rect",
-                        x: startX,
-                        y: startY,
-                        width: currentX - startX,
-                        height: currentY - startY
-                    };
-                    break;
-
-                case "circle":
-                    const radius = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
-                    drawingShape = {
-                        type: "circle",
-                        centreX: startX,
-                        centreY: startY,
-                        radius
-                    };
-                    break;
-
-                case "line":
-                    drawingShape = {
-                        type: "line",
-                        startX,
-                        startY,
-                        endX: currentX,
-                        endY: currentY
-                    }
-                    break;
-            }
-        }
     };
 
     // zoom handler
@@ -223,6 +200,7 @@ export function initDraw(
     function render() {
         if (!ctx) return;
 
+        // Clear + background
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -230,26 +208,77 @@ export function initDraw(
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
 
-        // apply camera
+        // apply world transform
         ctx.save();
         ctx.setTransform(viewport.zoom, 0, 0, viewport.zoom, viewport.offsetX, viewport.offsetY);
+
+        // Reacalculate shape in render loop for stable preview
+        if (isDrawing && currentTool !== "hand") {
+            const { worldX, worldY } = mouse;
+
+            switch (currentTool) {
+                case "rect":
+                    drawingShape = {
+                        type: "rect",
+                        x: startX,
+                        y: startY,
+                        width: worldX - startX,
+                        height: worldY - startY,
+                    };
+                    break;
+
+                case "circle":
+                    drawingShape = {
+                        type: "circle",
+                        centreX: startX,
+                        centreY: startY,
+                        radius: Math.hypot(worldX - startX, worldY - startY),
+                    };
+                    break;
+
+                case "line":
+                    drawingShape = {
+                        type: "line",
+                        startX,
+                        startY,
+                        endX: worldX,
+                        endY: worldY,
+                    };
+                    break;
+            }
+        }
 
         // draw all saved shapes
         existingShapes.forEach((shape) => drawShape(shape, ctx, viewport));
 
-        // preview shape while drawing
-        if (drawingShape) {
+        // current preview shape while drawing
+        if (isDrawing && drawingShape) {
+            ctx.save();
             ctx.strokeStyle = "rgba(255,255,255, 0.8)";
+            ctx.lineWidth = 2 / viewport.zoom;
             drawShape(drawingShape, ctx, viewport);
+            ctx.restore();
         }
 
+        // showing mouse pos on canvas
+        ctx.save();
+        ctx.fillStyle = "white";
+        ctx.font = `${12 / viewport.zoom}px monospace`
+        ctx.fillText(
+            `Mouse: (${mouse.worldX.toFixed(1)}, ${mouse.worldY.toFixed(1)})`,
+            mouse.worldX + 10,
+            mouse.worldY + 10
+        );
         ctx.restore();
 
+
+        ctx.restore();
         frameId = requestAnimationFrame(render);
     }
 
     frameId = requestAnimationFrame(render);
 
+    // Cleanup Fn
     return () => {
         cancelAnimationFrame(frameId);
         canvas.removeEventListener('mousedown', onMouseDown);
