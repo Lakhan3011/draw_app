@@ -85,6 +85,7 @@ export function initDraw(
     let startX = 0;
     let startY = 0;
 
+
     // Fetch old shapes
     getExistingShapes(roomId).then((shapes) => {
         existingShapes = shapes;
@@ -185,6 +186,8 @@ export function initDraw(
         viewport.offsetX = mouseX - worldBeforeZoom.x * newZoom;
         viewport.offsetY = mouseY - worldBeforeZoom.y * newZoom;
         viewport.zoom = newZoom;
+
+
     }
 
     canvas.addEventListener('mousedown', onMouseDown);
@@ -317,45 +320,6 @@ function drawShape(shape: Shape, ctx: CanvasRenderingContext2D, viewport: Viewpo
 }
 
 
-// function clearCanvas(existingShapes: Shape[], canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, viewport: Viewport) {
-//     // clean in device pixels
-//     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-//     // draw black background in screen pixels
-//     ctx.save();
-//     ctx.setTransform(1, 0, 0, 1, 0, 0);
-//     ctx.fillStyle = "black";
-//     ctx.fillRect(0, 0, canvas.width, canvas.height);
-//     ctx.restore();
-
-//     // apply world transform
-//     ctx.save();
-//     ctx.setTransform(viewport.zoom, 0, 0, viewport.zoom, viewport.offsetX, viewport.offsetY);
-
-
-//     // draw all the shapes
-//     existingShapes.forEach((shape) => {
-//         ctx.strokeStyle = "white";
-//         ctx.lineWidth = 2 / viewport.zoom;  // for stable width
-
-//         if (shape.type === "rect") {
-//             ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
-//         }
-//         else if (shape.type === "circle") {
-//             ctx.beginPath();
-//             ctx.arc(shape.centreX, shape.centreY, shape.radius, 0, Math.PI * 2);
-//             ctx.stroke();
-//         }
-//         else if (shape.type === "line") {
-//             ctx.beginPath();
-//             ctx.moveTo(shape.startX, shape.startY);
-//             ctx.lineTo(shape.endX, shape.endY);
-//             ctx.stroke();
-//         }
-//     });
-
-//     ctx.restore();
-// }
 
 async function getExistingShapes(roomId: string) {
     const res = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
@@ -367,4 +331,16 @@ async function getExistingShapes(roomId: string) {
     });
 
     return shapes;
+}
+
+// debounced fn to limit window resize event
+
+function debounce(func: Function, wait: number) {
+    let timeout: number | undefined;
+    return (...args: any[]) => {
+        clearTimeout(timeout);
+        timeout = window.setTimeout(() => {
+            func(...args);
+        }, wait);
+    };
 }
