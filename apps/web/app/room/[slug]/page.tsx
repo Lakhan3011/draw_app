@@ -1,7 +1,6 @@
 import axios from "axios";
 import { BACKEND_URL } from "../../config/config";
 import ChatRoom from "../../components/ChatRoom";
-import { RoomCanvas } from "../../components/RoomCanvas";
 
 async function getRoomId(slug: string) {
     const res = await axios.get(`${BACKEND_URL}/room/${slug}`);
@@ -18,7 +17,7 @@ export default async function Room({ params }: {
 
     return (
         <div className="bg-black w-screen h-screen flex flex-col justify-between text-white">
-            <RoomCanvas roomId={roomId} />
+            <ChatRoom id={roomId} />
         </div>
     )
 }

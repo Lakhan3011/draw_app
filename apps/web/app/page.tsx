@@ -1,7 +1,6 @@
 "use client"
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@repo/ui/components/ui/button"
 
 // TODO: use react form
 export default function Home() {
@@ -21,9 +20,6 @@ export default function Home() {
         onClick={() => router.push(`/room/${roomId}`)}
       >
         Join Room</button>
-      <div>
-        <Button variant={"outline"} className="bg-white">shadcn</Button>
-      </div>
     </div>
   );
 }
