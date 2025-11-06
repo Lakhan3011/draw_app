@@ -21,7 +21,7 @@ export const Navbar = () => {
                         <Button
                             variant="ghost"
                             onClick={() => router.push('/auth')}
-                            className="hover:bg-cyan-500"
+                            className="hover:bg-sky-300"
                         >
                             Sign In
                         </Button>
