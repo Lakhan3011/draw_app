@@ -140,8 +140,7 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-primary);
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 from-20% to-purple-600 to-80% ;
   }
 
   .animate-float {

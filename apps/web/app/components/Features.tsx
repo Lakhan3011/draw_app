@@ -5,7 +5,7 @@ const features = [
         icon: Pencil,
         title: "Freehand Drawing",
         description: "Sketch ideas naturally with smooth, responsive drawing tools that feel like pen on paper.",
-        color: "blue-500",
+        color: "blue-600",
     },
     {
         icon: Shapes,
@@ -46,7 +46,7 @@ export const Features = () => {
                 <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-5xl font-bold mb-4">
                         Everything You Need to
-                        <span className="text-transparent bg-gradient-to-r from-blue-600 from-20% to-purple-600 to-80% bg-clip-text"> Collaborate</span>
+                        <span className="text-gradient"> Collaborate</span>
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Built for teams who think visually. Draw, design, and brainstorm together in real-time.
@@ -61,8 +61,8 @@ export const Features = () => {
                                 key={index}
                                 className="group relative bg-card border border-border rounded-2xl p-8 hover:shadow-[var(--shadow-medium)] transition-all duration-300 hover:-translate-y-1"
                             >
-                                <div className={`inline-flex p-3 rounded-xl bg-${feature.color}/10 text-${feature.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                                    <Icon className="w-6 h-6" />
+                                <div className={`inline-flex p-3 rounded-xl bg-${feature.color}/10  mb-4 text-${feature.color} group-hover:scale-110 transition-transform duration-300`}>
+                                    <Icon className={`w-6 h-6 `} />
                                 </div>
                                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                                 <p className="text-muted-foreground leading-relaxed">{feature.description}</p>

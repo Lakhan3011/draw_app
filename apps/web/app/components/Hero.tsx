@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export const Hero = () => {
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-canvas-bg canvas-grid">
+        <section className="relative  min-h-screen flex items-center justify-center overflow-hidden bg-canvas-bg canvas-grid">
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-[var(--gradient-hero)] pointer-events-none" />
 
@@ -29,7 +29,7 @@ export const Hero = () => {
                         <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
                             Draw Together,
                             <br />
-                            <span className="text-transparent bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text">Create Together</span>
+                            <span className="text-gradient">Create Together</span>
                         </h1>
 
                         <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10 leading-relaxed">
