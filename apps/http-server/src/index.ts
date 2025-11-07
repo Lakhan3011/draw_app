@@ -20,10 +20,11 @@ app.get('/hi', (req, res) => {
 });
 
 app.post('/signup', async (req, res) => {
-    const parsedData = signUpSchema.safeParse(req.body);
+    const { name, email, password } = req.body;
+    const parsedData = signUpSchema.safeParse({ name, email, password });
     if (!parsedData.success) {
         return res.status(404).json({
-            message: "Invalid Input data"
+            message: "Invalid Input name data"
         })
     }
     try {
@@ -51,7 +52,8 @@ app.post('/signup', async (req, res) => {
 
 
 app.post('/signin', async (req, res) => {
-    const parsedData = signInSchema.safeParse(req.body);
+    const { email, password } = req.body;
+    const parsedData = signInSchema.safeParse({ email, password });
     if (!parsedData.success) {
         return res.status(400).json({
             message: "Invalid Input data"
@@ -67,7 +69,7 @@ app.post('/signin', async (req, res) => {
 
         if (!user || !(await bcrypt.compare(parsedData.data.password, user.password))) {
             return res.status(401).json({
-                error: "Invalid credentials"
+                message: "Invalid credentials"
             })
         }
 

@@ -7,25 +7,55 @@ import { Label } from "@repo/ui/components/ui/label";
 import { Pencil } from "lucide-react";
 import { toast } from "@repo/ui/components/ui/sonner";
 import { useRouter, useSearchParams } from "next/navigation";
+import { dataTagErrorSymbol, useMutation } from "@tanstack/react-query";
+import { SignUpUser, SignInUser } from "@/services/auth";
+
+
 
 export default function Auth() {
+
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isSignUp, setIsSignUp] = useState(searchParams.get("mode") === "signup");
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
 
-    const handleAuth = async (e: React.FormEvent) => {
+    const signUpMutation = useMutation({
+        mutationFn: SignUpUser,
+        onSuccess: (data) => {
+            toast.success(data.message);
+            setName("");
+            setEmail("");
+            setPassword("");
+            router.push('/signup')
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || "Invalid data Entry");
+        }
+    })
+
+    const signInMutation = useMutation({
+        mutationFn: SignInUser,
+        onSuccess: (data) => {
+            toast.success(data.message);
+            localStorage.setItem('token', data.token);
+            setEmail("");
+            setPassword("");
+            router.push('/signin')
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || "Invalid data Entry");
+        }
+    })
+
+
+
+    const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
 
-        // Authentication will be enabled once Lovable Cloud is activated
-        toast.error("Backend Required", {
-            description: "Please enable Lovable Cloud to use authentication features."
-        });
-
-        setLoading(false);
+        { isSignUp && signUpMutation.mutate({ name, email, password }); }
+        signInMutation.mutate({ email, password });
     };
 
     return (
@@ -49,6 +79,19 @@ export default function Auth() {
                     </div>
 
                     <form onSubmit={handleAuth} className="space-y-4">
+                        {isSignUp && <div className="space-y-2">
+                            <Label htmlFor="name">Name</Label>
+                            <Input
+                                id="name"
+                                type="text"
+                                placeholder="lakhanDev"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                                minLength={6}
+                                maxLength={255}
+                            />
+                        </div>}
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -80,9 +123,9 @@ export default function Auth() {
                             type="submit"
                             variant="hero"
                             className="w-full"
-                            disabled={loading}
+                            disabled={signUpMutation.isPending}
                         >
-                            {loading ? "Processing..." : (isSignUp ? "Sign Up" : "Sign In")}
+                            {signUpMutation.isPending || signInMutation.isPending ? "Processing..." : (isSignUp ? "Sign Up" : "Sign In")}
                         </Button>
                     </form>
 
