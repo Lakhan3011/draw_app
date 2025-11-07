@@ -5,19 +5,19 @@ const features = [
         icon: Pencil,
         title: "Freehand Drawing",
         description: "Sketch ideas naturally with smooth, responsive drawing tools that feel like pen on paper.",
-        color: "blue-600",
+        color: 'blue-600',
     },
     {
         icon: Shapes,
         title: "Shape Library",
         description: "Access rectangles, circles, arrows, and more. Create diagrams and wireframes in seconds.",
-        color: "chart-4",
+        color: `red-500`,
     },
     {
         icon: Users,
         title: "Real-time Collaboration",
         description: "See everyone's cursors and edits live. Multiple users can draw simultaneously without lag.",
-        color: "chart-3",
+        color: `green-500`,
     },
     {
         icon: MousePointer2,
@@ -59,9 +59,9 @@ export const Features = () => {
                         return (
                             <div
                                 key={index}
-                                className="group relative bg-card border border-border rounded-2xl p-8 hover:shadow-[var(--shadow-medium)] transition-all duration-300 hover:-translate-y-1"
+                                className="group relative  bg-card border border-border rounded-2xl p-8 hover:shadow-[var(--shadow-medium)] transition-all duration-300 hover:-translate-y-1"
                             >
-                                <div className={`inline-flex p-3 rounded-xl bg-${feature.color}/10  mb-4 text-${feature.color} group-hover:scale-110 transition-transform duration-300`}>
+                                <div className={`inline-flex p-3 rounded-xl bg-${feature.color}/10  text-${feature.color} mb-4  group-hover:scale-110 transition-transform duration-300`}>
                                     <Icon className={`w-6 h-6 `} />
                                 </div>
                                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
