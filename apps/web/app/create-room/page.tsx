@@ -61,7 +61,7 @@ export default function CreateRoom() {
                     <div className="space-y-4">
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-4">
-                                <Label htmlFor="Room Name" > Room Name</Label>
+                                <Label htmlFor="Room Name"> Room Name</Label>
                                 <Input
                                     id="roomName"
                                     type="text"

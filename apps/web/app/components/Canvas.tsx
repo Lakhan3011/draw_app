@@ -38,7 +38,6 @@ export function Canvas({ roomId, socket }: {
     }, []);
 
     useEffect(() => {
-
         if (canvasRef.current && canvasSize.width > 0) {
             const cleanup = initDraw(canvasRef.current, roomId, socket, selectedTool);
             return () => {
