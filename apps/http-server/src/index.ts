@@ -89,10 +89,11 @@ app.post('/signin', async (req, res) => {
 });
 
 app.post('/room', userMiddleware, async (req: AuthRequest, res: Response) => {
-    const parsedData = createRoomSchema.safeParse(req.body);
+    const { name } = req.body;
+    const parsedData = createRoomSchema.safeParse({ name });
     if (!parsedData.success) {
         return res.status(400).json({
-            error: 'Incorrect Input for room name'
+            message: 'Incorrect Input for room name'
         })
     }
     const userId = req.userId;
@@ -119,7 +120,7 @@ app.post('/room', userMiddleware, async (req: AuthRequest, res: Response) => {
         })
     } catch (error) {
         return res.status(411).json({
-            error: "Room already exist with this name"
+            message: "Room already exist with this name"
         })
     }
 })

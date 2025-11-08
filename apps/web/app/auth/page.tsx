@@ -7,7 +7,7 @@ import { Label } from "@repo/ui/components/ui/label";
 import { Pencil } from "lucide-react";
 import { toast } from "@repo/ui/components/ui/sonner";
 import { useRouter, useSearchParams } from "next/navigation";
-import { dataTagErrorSymbol, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { SignUpUser, SignInUser } from "@/services/auth";
 
 
@@ -24,28 +24,57 @@ export default function Auth() {
     const signUpMutation = useMutation({
         mutationFn: SignUpUser,
         onSuccess: (data) => {
-            toast.success(data.message);
+            toast.success("Success", {
+                description: data.message,
+                position: "top-center",
+                style: {
+                    background: "green",
+                    color: "white",
+                },
+            });
             setName("");
             setEmail("");
             setPassword("");
-            router.push('/signup')
+            setIsSignUp(false);
+            router.push('/auth')
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || "Invalid data Entry");
+            toast.error("Error", {
+                description: error?.response?.data?.message,
+                position: "top-center",
+                style: {
+                    background: "red",
+                    color: "white",
+                }
+            });
         }
     })
 
     const signInMutation = useMutation({
         mutationFn: SignInUser,
         onSuccess: (data) => {
-            toast.success(data.message);
+            toast.success("Success", {
+                description: data.message,
+                position: "top-center",
+                style: {
+                    background: "green",
+                    color: "white",
+                },
+            });
             localStorage.setItem('token', data.token);
             setEmail("");
             setPassword("");
-            router.push('/signin')
+            router.push('/create-room')
         },
         onError: (error: any) => {
-            toast.error(error?.response?.data?.message || "Invalid data Entry");
+            toast.error("Error", {
+                description: error?.response?.data?.message,
+                position: "top-center",
+                style: {
+                    background: "red",
+                    color: "white",
+                }
+            });
         }
     })
 
@@ -53,8 +82,10 @@ export default function Auth() {
 
     const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
-
-        { isSignUp && signUpMutation.mutate({ name, email, password }); }
+        if (isSignUp) {
+            signUpMutation.mutate({ name, email, password });
+            return;
+        }
         signInMutation.mutate({ email, password });
     };
 

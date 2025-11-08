@@ -3,7 +3,7 @@ export default function AuthPage({ isSignin }: {
     isSignin: boolean
 }) {
     return (
-        <div className="w-screen h-screen bg-black flex justify-center items-center">
+        <div className="w-screen h-screen  flex justify-center items-center">
             <div className="flex flex-col gap-4 bg-white p-4 rounded-sm">
                 <div className="text-center font-semibold text-2xl text-gray-700">ExcaliDraw</div>
                 <div className="flex flex-col gap-4 p-2 ">

@@ -143,6 +143,10 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 from-20% to-purple-600 to-80% ;
   }
 
+  .logo-gradient{
+    @apply bg-gradient-to-br from-blue-700/80 to-purple-700 ;
+  }
+
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
