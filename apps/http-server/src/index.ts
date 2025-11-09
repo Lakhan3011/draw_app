@@ -125,6 +125,39 @@ app.post('/room', userMiddleware, async (req: AuthRequest, res: Response) => {
     }
 })
 
+app.get('/existing-rooms', userMiddleware, async (req: AuthRequest, res: Response) => {
+    const userId = req.userId;
+    if (!userId) {
+        return res.status(401).json({
+            message: "Unauthorized user"
+        })
+    }
+
+    try {
+        const rooms = await prisma.room.findMany({
+            where: {
+                adminId: userId
+            }
+        })
+
+        if (rooms) {
+            return res.status(200).json({
+                success: true,
+                rooms: rooms
+            })
+        }
+
+        return res.status(404).json({
+            message: "Error in fetching existing rooms"
+        })
+
+    } catch (error: any) {
+        return res.status(500).json({
+            message: `Internal Server Error || ${error.message}`
+        })
+    }
+})
+
 app.get('/chats/:roomId', async (req, res) => {
     const roomId = Number(req.params.roomId);
 
@@ -138,13 +171,23 @@ app.get('/chats/:roomId', async (req, res) => {
                 message: 'desc'
             }
         })
+        if (chats) {
+            return res.status(200).json({
+                success: true,
+                chats: chats
+            })
+        }
 
-        return res.status(200).json({
-            success: true,
-            chats: chats
+        return res.status(404).json({
+            message: "Error in fetching chats"
         })
+
     } catch (error: any) {
-        console.log('Error in fetching chats: ', error.message)
+        // console.log('Error in fetching chats: ', error.message);
+        return res.status(500).json({
+            success: false,
+            error: `Internal server error || ${error.message}`
+        })
     }
 })
 

@@ -1,6 +1,5 @@
 import axios from "axios";
 import { BACKEND_URL } from "../../config/config";
-import ChatRoom from "../../components/ChatRoom";
 import { RoomCanvas } from "@/app/components/RoomCanvas";
 
 async function getRoomId(slug: string) {

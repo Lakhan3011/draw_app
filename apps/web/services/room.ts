@@ -12,3 +12,14 @@ export async function CreateNewRoom(roomName: {
     });
     return res.data;
 }
+
+export async function GetExistingRooms() {
+    const res = await axios.get(`${BACKEND_URL}/existing-rooms`, {
+        headers: {
+            Authorization: localStorage.getItem("token"),
+        }
+    });
+
+    const rooms = res.data.rooms;
+    return rooms;
+}

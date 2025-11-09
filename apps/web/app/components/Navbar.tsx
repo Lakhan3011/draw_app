@@ -20,6 +20,12 @@ export const Navbar = () => {
                     <div className="flex items-center gap-3">
                         <Button
                             variant="ghost"
+                            onClick={() => router.push('/existing-rooms')}
+                        >
+                            My Rooms
+                        </Button>
+                        <Button
+                            variant="ghost"
                             onClick={() => router.push('/auth')}
                             className="hover:bg-sky-300"
                         >
