@@ -20,33 +20,7 @@ interface Room {
     createdAt: string
 }
 
-// Mock data - will be replaced with real data from Lovable Cloud
-const mockRooms = [
-    {
-        id: "1",
-        name: "Design Brainstorm",
-        participants: 3,
-        maxParticipants: 8,
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        isActive: true,
-    },
-    {
-        id: "2",
-        name: "Team Drawing Session",
-        participants: 5,
-        maxParticipants: 10,
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        isActive: true,
-    },
-    {
-        id: "3",
-        name: "Quick Sketch",
-        participants: 1,
-        maxParticipants: 4,
-        createdAt: new Date(Date.now() - 1800000).toISOString(),
-        isActive: false,
-    },
-];
+
 
 export default function Rooms() {
     const router = useRouter();
@@ -64,6 +38,7 @@ export default function Rooms() {
     }
 
     if (error) {
+        console.log(error);
         return (
             <p>
                 Error in fetching rooms...
@@ -72,11 +47,11 @@ export default function Rooms() {
     }
 
 
-    const handleJoinRoom = (roomName: string) => {
+    const handleJoinRoom = (roomId: string) => {
         toast.success("Backend Required", {
             description: "Enable Lovable Cloud to join rooms and collaborate in real-time."
         });
-        router.push(`/room/${roomName}`)
+        router.push(`/room/${roomId}`)
     };
 
     const handleCreateRoom = () => {
@@ -141,7 +116,7 @@ export default function Rooms() {
                                 <CardContent>
                                     <Button
                                         className="w-full"
-                                        onClick={() => handleJoinRoom(room.slug)}
+                                        onClick={() => handleJoinRoom(room.id)}
                                         disabled={room.participants >= room.maxParticipants}
                                         variant={"hero"}
                                     >
