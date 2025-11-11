@@ -20,6 +20,9 @@ export async function GetExistingRooms() {
         }
     });
 
-    const rooms = res.data.rooms;
-    return rooms;
+    if (res) {
+        const rooms = res.data.rooms;
+        return rooms;
+    }
+
 }

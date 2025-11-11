@@ -5,11 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Users, Clock, Plus } from "lucide-react";
 import { toast } from "@repo/ui/components/ui/sonner";
-import { Navbar } from "../components/Navbar";
 import { useQuery } from "@tanstack/react-query";
 import { GetExistingRooms } from "@/services/room";
 import { useRouter } from "next/navigation";
 import { RoomCanvas } from "../components/RoomCanvas";
+import CreateRoom from "../components/CreateRoom";
+import { useState } from "react";
 
 interface Room {
     id: string,
@@ -24,6 +25,7 @@ interface Room {
 
 export default function Rooms() {
     const router = useRouter();
+    const [modalOpen, setModalOpen] = useState(false);
     // const [rooms] = useState(mockRooms);
 
     const { data: rooms, isLoading, error } = useQuery({
@@ -38,14 +40,18 @@ export default function Rooms() {
     }
 
     if (error) {
-        console.log(error);
+        toast.error("UnAuthorized ", {
+            description: "Please signin again...",
+            position: "top-center",
+            style: {
+                background: "red",
+                color: "white"
+            }
+        })
         return (
-            <p>
-                Error in fetching rooms...
-            </p>
+            router.push('/auth')
         )
     }
-
 
     const handleJoinRoom = (roomId: string) => {
         toast.success("Backend Required", {
@@ -54,11 +60,6 @@ export default function Rooms() {
         router.push(`/room/${roomId}`)
     };
 
-    const handleCreateRoom = () => {
-        toast.success("Backend Required", {
-            description: "Enable Lovable Cloud to create new rooms."
-        });
-    };
 
     const getTimeAgo = (date: string) => {
         const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -72,10 +73,10 @@ export default function Rooms() {
 
     return (
         <div className="min-h-screen bg-background">
-
             {/* Main Content */}
             <main className="p-12">
                 <div className="container mx-auto px-4">
+                    <CreateRoom open={modalOpen} onClose={() => setModalOpen(false)} />
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h1 className="text-4xl font-bold mb-2">My Rooms</h1>
@@ -83,7 +84,7 @@ export default function Rooms() {
                         </div>
                         <Button
                             size="lg"
-                            onClick={handleCreateRoom}
+                            onClick={() => setModalOpen(true)}
                             className="gap-2"
                             variant={"canvas"}
                         >
@@ -130,7 +131,7 @@ export default function Rooms() {
                     {rooms.length === 0 && (
                         <div className="text-center py-12">
                             <p className="text-muted-foreground text-lg mb-4">No rooms yet</p>
-                            <Button onClick={handleCreateRoom}>Create Your First Room</Button>
+                            <Button onClick={() => setModalOpen(true)}>Create Your First Room</Button>
                         </div>
                     )}
                 </div>

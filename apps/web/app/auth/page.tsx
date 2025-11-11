@@ -64,7 +64,7 @@ export default function Auth() {
             localStorage.setItem('token', data.token);
             setEmail("");
             setPassword("");
-            router.push('/create-room')
+            router.push('/existing-rooms');
         },
         onError: (error: any) => {
             toast.error("Error", {
