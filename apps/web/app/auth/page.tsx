@@ -154,7 +154,7 @@ export default function Auth() {
                             type="submit"
                             variant="hero"
                             className="w-full"
-                            disabled={signUpMutation.isPending}
+                            disabled={signUpMutation.isPending || signInMutation.isPending}
                         >
                             {signUpMutation.isPending || signInMutation.isPending ? "Processing..." : (isSignUp ? "Sign Up" : "Sign In")}
                         </Button>

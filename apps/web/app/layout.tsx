@@ -4,8 +4,6 @@ import "@repo/ui/globals.css";
 import { Toaster } from "@repo/ui/components/ui/sonner";
 import Provider from "@/providers";
 
-
-
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",

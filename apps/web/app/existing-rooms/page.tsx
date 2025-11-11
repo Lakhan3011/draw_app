@@ -3,14 +3,14 @@
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 import { Badge } from "@repo/ui/components/ui/badge";
-import { Users, Clock, Plus } from "lucide-react";
+import { Users, Clock, Plus, LogOutIcon } from "lucide-react";
 import { toast } from "@repo/ui/components/ui/sonner";
 import { useQuery } from "@tanstack/react-query";
 import { GetExistingRooms } from "@/services/room";
 import { useRouter } from "next/navigation";
 import { RoomCanvas } from "../components/RoomCanvas";
 import CreateRoom from "../components/CreateRoom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Room {
     id: string,
@@ -26,39 +26,56 @@ interface Room {
 export default function Rooms() {
     const router = useRouter();
     const [modalOpen, setModalOpen] = useState(false);
-    // const [rooms] = useState(mockRooms);
 
     const { data: rooms, isLoading, error } = useQuery({
         queryKey: ["rooms"],
         queryFn: GetExistingRooms
     });
 
-    if (isLoading) {
-        return (
-            <p>Loading rooms....</p>
-        )
-    }
 
-    if (error) {
-        toast.error("UnAuthorized ", {
-            description: "Please signin again...",
+    useEffect(() => {
+        if (error) {
+            toast.error("UnAuthorized", {
+                description: "Please sign In again..",
+                position: "top-center",
+                style: {
+                    background: "red",
+                    color: "white"
+                }
+            })
+            router.push('/auth');
+        }
+    }, [router, error]);
+    // if (error) {
+    //     toast.error("UnAuthorized ", {
+    //         description: "Please signin again...",
+    //         position: "top-center",
+    //         style: {
+    //             background: "red",
+    //             color: "white"
+    //         }
+    //     })
+    //     return (
+    //         router.push('/auth')
+    //     )
+    // }
+
+    const handleJoinRoom = (roomId: string) => {
+        router.push(`/room/${roomId}`)
+    };
+
+    const handleLogOut = () => {
+        toast.success("Successfully logout", {
+            description: "See you later",
             position: "top-center",
             style: {
-                background: "red",
+                background: "green",
                 color: "white"
             }
         })
-        return (
-            router.push('/auth')
-        )
+        localStorage.removeItem('token');
+        router.push('/');
     }
-
-    const handleJoinRoom = (roomId: string) => {
-        toast.success("Backend Required", {
-            description: "Enable Lovable Cloud to join rooms and collaborate in real-time."
-        });
-        router.push(`/room/${roomId}`)
-    };
 
 
     const getTimeAgo = (date: string) => {
@@ -71,6 +88,14 @@ export default function Rooms() {
         return "Just now";
     };
 
+    if (isLoading) {
+        return (
+            <p>Loading rooms....</p>
+        )
+    }
+
+    const safeRooms = rooms ?? [];
+
     return (
         <div className="min-h-screen bg-background">
             {/* Main Content */}
@@ -82,19 +107,30 @@ export default function Rooms() {
                             <h1 className="text-4xl font-bold mb-2">My Rooms</h1>
                             <p className="text-muted-foreground">Join a room to start collaborating</p>
                         </div>
-                        <Button
-                            size="lg"
-                            onClick={() => setModalOpen(true)}
-                            className="gap-2"
-                            variant={"canvas"}
-                        >
-                            <Plus className="w-5 h-5" />
-                            Create Room
-                        </Button>
+                        <div className="flex gap-5">
+                            <Button
+                                size="lg"
+                                onClick={() => setModalOpen(true)}
+                                className="gap-2"
+                                variant={"canvas"}
+                            >
+                                <Plus className="w-5 h-5" />
+                                Create Room
+                            </Button>
+                            <Button
+                                size="lg"
+                                onClick={() => handleLogOut()}
+                                className="gap-2"
+                                variant={"canvas"}
+                            >
+                                <LogOutIcon className="w-5 h-5" />
+                                Log Out
+                            </Button>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {rooms.map((room: Room) => (
+                        {safeRooms.map((room: Room) => (
                             <Card key={room.id} className="hover:shadow-lg canvas-grid transition-shadow">
                                 <CardHeader>
                                     <div className="flex items-start justify-between">
@@ -128,7 +164,7 @@ export default function Rooms() {
                         ))}
                     </div>
 
-                    {rooms.length === 0 && (
+                    {safeRooms.length === 0 && (
                         <div className="text-center py-12">
                             <p className="text-muted-foreground text-lg mb-4">No rooms yet</p>
                             <Button onClick={() => setModalOpen(true)}>Create Your First Room</Button>
