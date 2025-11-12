@@ -8,9 +8,9 @@ import { toast } from "@repo/ui/components/ui/sonner";
 import { useQuery } from "@tanstack/react-query";
 import { GetExistingRooms } from "@/services/room";
 import { useRouter } from "next/navigation";
-import { RoomCanvas } from "../components/RoomCanvas";
 import CreateRoom from "../components/CreateRoom";
 import { useEffect, useState } from "react";
+import { Navbar } from "../components/Navbar";
 
 interface Room {
     id: string,
@@ -46,36 +46,13 @@ export default function Rooms() {
             router.push('/auth');
         }
     }, [router, error]);
-    // if (error) {
-    //     toast.error("UnAuthorized ", {
-    //         description: "Please signin again...",
-    //         position: "top-center",
-    //         style: {
-    //             background: "red",
-    //             color: "white"
-    //         }
-    //     })
-    //     return (
-    //         router.push('/auth')
-    //     )
-    // }
+
 
     const handleJoinRoom = (roomId: string) => {
         router.push(`/room/${roomId}`)
     };
 
-    const handleLogOut = () => {
-        toast.success("Successfully logout", {
-            description: "See you later",
-            position: "top-center",
-            style: {
-                background: "green",
-                color: "white"
-            }
-        })
-        localStorage.removeItem('token');
-        router.push('/');
-    }
+
 
 
     const getTimeAgo = (date: string) => {
@@ -98,35 +75,27 @@ export default function Rooms() {
 
     return (
         <div className="min-h-screen bg-background">
+            {/* Navbar */}
+            <Navbar auth={false} />
             {/* Main Content */}
-            <main className="p-12">
+            <main className="pt-24 px-12">
                 <div className="container mx-auto px-4">
+
                     <CreateRoom open={modalOpen} onClose={() => setModalOpen(false)} />
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h1 className="text-4xl font-bold mb-2">My Rooms</h1>
                             <p className="text-muted-foreground">Join a room to start collaborating</p>
                         </div>
-                        <div className="flex gap-5">
-                            <Button
-                                size="lg"
-                                onClick={() => setModalOpen(true)}
-                                className="gap-2"
-                                variant={"canvas"}
-                            >
-                                <Plus className="w-5 h-5" />
-                                Create Room
-                            </Button>
-                            <Button
-                                size="lg"
-                                onClick={() => handleLogOut()}
-                                className="gap-2"
-                                variant={"canvas"}
-                            >
-                                <LogOutIcon className="w-5 h-5" />
-                                Log Out
-                            </Button>
-                        </div>
+                        <Button
+                            size="lg"
+                            onClick={() => setModalOpen(true)}
+                            className="gap-2"
+                            variant={"canvas"}
+                        >
+                            <Plus className="w-5 h-5" />
+                            Create Room
+                        </Button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

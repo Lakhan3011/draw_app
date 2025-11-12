@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar auth={true} />
       <Hero />
       <Features />
       <HowItWorks />

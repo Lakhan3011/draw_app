@@ -10,8 +10,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { SignUpUser, SignInUser } from "@/services/auth";
 
-
-
 export default function Auth() {
 
     const router = useRouter();
@@ -92,7 +90,6 @@ export default function Auth() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-canvas-bg canvas-grid p-4">
             <div className="absolute inset-0 bg-[var(--gradient-hero)] pointer-events-none" />
-
             <div className="w-full max-w-md relative z-10">
                 <div className="bg-card/80 backdrop-blur-sm border-2 border-border rounded-3xl p-8 shadow-[var(--shadow-medium)]">
                     <div className="flex flex-col items-center mb-8">
