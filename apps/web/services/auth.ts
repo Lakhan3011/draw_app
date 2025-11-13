@@ -16,3 +16,4 @@ export async function SignInUser(user: User) {
     const res = await axios.post(`${BACKEND_URL}/signin`, user);
     return res.data;
 }
+

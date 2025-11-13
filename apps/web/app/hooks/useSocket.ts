@@ -5,8 +5,10 @@ export function useSocket() {
     const [loading, setLoading] = useState(true);
     const [socket, setSocket] = useState<WebSocket | null>(null);
 
+    const token = localStorage.getItem("token");
+
     useEffect(() => {
-        const ws = new WebSocket(`${WEBSOCKET_URL}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJiYjI0ODYyNi1iOTVjLTRmMTQtOGQzZS0zY2MyZDcwOTRiYzYiLCJpYXQiOjE3NjE5MjcyNzh9.IPRBZjHsicgxsKiStm_qokhIZVVdpeuiFvqhiFNzrAc`);
+        const ws = new WebSocket(`${WEBSOCKET_URL}?token=${token!}`);
 
         ws.onopen = () => {
             setLoading(false);

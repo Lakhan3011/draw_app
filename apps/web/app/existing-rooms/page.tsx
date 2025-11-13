@@ -53,8 +53,6 @@ export default function Rooms() {
     };
 
 
-
-
     const getTimeAgo = (date: string) => {
         const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
         const minutes = Math.floor(seconds / 60);
