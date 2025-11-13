@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { initDraw } from "../../draw";
+import { initDraw } from "@/draw";
 import { IconButton } from "./IconButton";
 import { Circle, HandGrab, Pencil, RectangleHorizontal } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
@@ -15,6 +15,7 @@ export function Canvas({ roomId, socket }: {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedTool, setSelectedTool] = useState<ShapeType>('rect');
+    const [userCount, setUserCount] = useState(0);
     const [canvasSize, setCanvasSize] = useState({
         width: 0,
         height: 0
@@ -31,7 +32,6 @@ export function Canvas({ roomId, socket }: {
 
         // Initial default canvas size
         updateCanvasSize();
-
         window.addEventListener('resize', updateCanvasSize);
 
         return () => {
@@ -40,6 +40,21 @@ export function Canvas({ roomId, socket }: {
 
     }, []);
 
+
+    // Handle socket messages for user count
+    useEffect(() => {
+        const handleSocketUserCount = (event: MessageEvent) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "user_count") {
+                setUserCount(data.count);
+            }
+        };
+        socket.addEventListener('message', handleSocketUserCount);
+        return () => socket.removeEventListener('message', handleSocketUserCount);
+    }, [socket]);
+
+
+    // Initailize drawing logic
     useEffect(() => {
         if (canvasRef.current && canvasSize.width > 0) {
             const cleanup = initDraw(canvasRef.current, roomId, socket, selectedTool);
@@ -72,6 +87,11 @@ export function Canvas({ roomId, socket }: {
                     variant={"destructive"}
                     onClick={handleLogout}
                 >Log Out</Button>
+            </div>
+
+            {/* Floating user count */}
+            <div className="absolute top-4 left-4 bg-gray-800/90 text-white px-4 py-2 rounded-lg text-sm shadow-md">
+                <span> 👥 {userCount} {userCount === 1 ? "user" : "users"} online </span>
             </div>
         </div>
     )

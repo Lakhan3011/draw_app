@@ -7,19 +7,18 @@ const wss = new WebSocketServer({ port: 8080 });
 
 interface User {
     socket: WebSocket,
-    // rooms: string[],
     userId: string
 }
 
 const rooms = new Map<string, Set<User>>();
 
-// const users: User[] = [];
 
 function joinRoom(roomId: string, user: User) {
     if (!rooms.has(roomId)) {
         rooms.set(roomId, new Set());
     };
     rooms.get(roomId)!.add(user);
+    broadCastUserCount(roomId);
 }
 
 function leaveRoom(roomId: string, user: User) {
@@ -31,6 +30,7 @@ function leaveRoom(roomId: string, user: User) {
     if (room.size === 0) {
         rooms.delete(roomId);
     }
+    broadCastUserCount(roomId);
 }
 
 function broadcast(roomId: string, message: any) {
@@ -44,24 +44,27 @@ function broadcast(roomId: string, message: any) {
     }
 }
 
+// Broadcast the updates user count
+function broadCastUserCount(roomId: string) {
+    const count = getUserCount(roomId);
+    broadcast(roomId, {
+        type: "user_count",
+        roomId,
+        count
+    });
+}
+
 function getUserCount(roomId: string) {
     return rooms.get(roomId)?.size || 0;
 }
 
+// Verify JWT
 function checkUser(token: string): string | null {
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-        if (!decoded || !decoded.userId) {
-            return null;
-        }
-
-        return decoded.userId;
+        return decoded?.userId ?? null;
     } catch (error: any) {
-        if (error.name === "TokenExpiredError") {
-            console.warn('JWT Expired: ', error.message);
-        } else {
-            console.warn('JWT Invalid: ', error.message);
-        }
+        console.warn("JWT Error :", error.message);
         return null;
     }
 }
@@ -71,20 +74,21 @@ wss.on('connection', (socket, req) => {
     // console.log('Client connected');
     const url = req.url;
     if (!url) {
-        return null;
+        socket.close();
+        return;
     }
 
     const queryParams = new URLSearchParams(url.split('?')[1]);
     const token = queryParams.get("token") || "";
-
     const userId = checkUser(token);
-    if (userId === null) {
+
+    if (!userId) {
         socket.close();
         return;
     }
 
 
-    let currentRoom: string = "";
+    let currentRoom = "";
     let currentUser: User | null = null;
 
     socket.on('message', async (message) => {
@@ -115,8 +119,7 @@ wss.on('connection', (socket, req) => {
             })
         }
 
-        if (parsedData.type === "leave") {
-            if (!currentUser) { return };
+        if (parsedData.type === "leave" && currentUser) {
             leaveRoom(currentRoom, currentUser);
 
             broadcast(currentRoom, {
@@ -126,8 +129,6 @@ wss.on('connection', (socket, req) => {
             })
         }
 
-        // console.log('message recieved');
-        // console.log(parsedData);
 
         // TODO: Rate limit msg not too long
         // Auth: now anyone sends msg to any room, if one subs to room1, he mays sends msg to room2
@@ -144,10 +145,18 @@ wss.on('connection', (socket, req) => {
                     roomId: Number(currentRoom),
                     userId: currentUser.userId,
                     message: parsedData.message
-                }
-            })
+                },
+            });
 
             broadcast(currentRoom, msg);
         }
-    })
+    });
+
+    // Handle socket disconnection
+    socket.on("close", () => {
+        if (currentUser && currentRoom) {
+            console.log(`User ${currentUser.userId} disconnected from ${currentRoom}`)
+            leaveRoom(currentRoom, currentUser);
+        }
+    });
 })
