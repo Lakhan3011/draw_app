@@ -1,5 +1,6 @@
 import { BACKEND_URL } from "@/config"
 import axios from "axios"
+import { useMemo } from "react";
 
 
 export async function CreateNewRoom(roomName: {
@@ -25,4 +26,12 @@ export async function GetExistingRooms() {
         return rooms;
     }
 
+}
+
+export const myColor = () => {
+    const cursorColor = useMemo(
+        () => `hsl (${Math.random() * 360}, 70%, 60%)`,
+        []
+    );
+    return cursorColor;
 }

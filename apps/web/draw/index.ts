@@ -1,6 +1,8 @@
 import axios from "axios";
 import { BACKEND_URL } from "../app/config/config";
-import { start } from "repl";
+import { LiveCursors } from "@/app/components/Canvas";
+
+
 
 type Shape = {
     type: "rect";
@@ -48,11 +50,13 @@ export function initDraw(
     canvas: HTMLCanvasElement,
     roomId: string,
     socket: WebSocket,
-    currentTool: ToolType
+    currentTool: ToolType,
+    liveCursorsRef: React.RefObject<LiveCursors>,
+    myColorRef: React.RefObject<string>
 ) {
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) { return () => { }; }
 
     let existingShapes: Shape[] = [];
     let drawingShape: Shape | null = null;
@@ -84,6 +88,23 @@ export function initDraw(
     let isDrawing = false;
     let startX = 0;
     let startY = 0;
+
+
+    // throttle cursor sends (50ms)
+    let lastSent = 0;
+    const sendCursorIfNeeded = () => {
+        const now = Date.now();
+        if (now - lastSent < 50) return;
+        lastSent = now;
+        // send world coords
+        socket.send(JSON.stringify({
+            type: "cursor_move",
+            roomId,
+            x: mouse.worldX,
+            y: mouse.worldY,
+            color: myColorRef?.current
+        }));
+    };
 
 
     // Fetch old shapes
@@ -145,7 +166,7 @@ export function initDraw(
 
         isDrawing = false;
         drawingShape = null;
-    };
+    }
 
     const onMouseMove = (e: MouseEvent) => {
         const rect = canvas.getBoundingClientRect();
@@ -167,6 +188,10 @@ export function initDraw(
             return;
         }
 
+        // send live cursor updates
+        if (!isDrawing && !isPanning) {
+            sendCursorIfNeeded();
+        }
     };
 
     // zoom handler
@@ -263,6 +288,28 @@ export function initDraw(
             ctx.restore();
         }
 
+        // Draw remote cursors — world coords (read from ref)
+        const live = liveCursorsRef?.current ?? {};
+        Object.entries(live).forEach(([userId, cursor]) => {
+            ctx.save();
+
+            ctx.fillStyle = cursor.color || "white";
+            ctx.strokeStyle = cursor.color || "white";
+            ctx.lineWidth = 2 / viewport.zoom;
+
+            // cursor circle
+            ctx.beginPath();
+            ctx.arc(cursor.x, cursor.y, 6 / viewport.zoom, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Username tag
+            ctx.font = `${12 / viewport.zoom}px monospace`;
+            ctx.fillStyle = "white";
+            ctx.fillText(userId, cursor.x + 8 / viewport.zoom, cursor.y - 10 / viewport.zoom);
+
+            ctx.restore();
+        })
+
         // showing mouse pos on canvas
         ctx.save();
         ctx.fillStyle = "white";
@@ -333,14 +380,3 @@ async function getExistingShapes(roomId: string) {
     return shapes;
 }
 
-// debounced fn to limit window resize event
-
-function debounce(func: Function, wait: number) {
-    let timeout: number | undefined;
-    return (...args: any[]) => {
-        clearTimeout(timeout);
-        timeout = window.setTimeout(() => {
-            func(...args);
-        }, wait);
-    };
-}

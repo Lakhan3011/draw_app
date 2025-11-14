@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useRef, useState } from "react";
 import { initDraw } from "@/draw";
 import { IconButton } from "./IconButton";
@@ -6,6 +8,8 @@ import { Button } from "@repo/ui/components/ui/button";
 import { useRouter } from "next/navigation";
 
 type ShapeType = "rect" | "circle" | "line" | "hand";
+export type CursorData = { x: number; y: number; color: string };
+export type LiveCursors = Record<string, CursorData>;
 
 export function Canvas({ roomId, socket }: {
     roomId: string;
@@ -15,12 +19,22 @@ export function Canvas({ roomId, socket }: {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedTool, setSelectedTool] = useState<ShapeType>('rect');
-    const [userCount, setUserCount] = useState(0);
     const [canvasSize, setCanvasSize] = useState({
         width: 0,
         height: 0
     });
 
+    // React state for user count (UI overlay)
+    const [userCount, setUserCount] = useState(0);
+
+    // store cursors in a ref (mutable, no rerenders)
+    const liveCursorsRef = useRef<LiveCursors>({});
+
+    // my color (prefer to persist or get from server welcome)
+    const myColorRef = useRef<string>(`hsl(${Math.floor(Math.random() * 360)},70%,60%)`);
+    const myUserIdRef = useRef<string | null>(null);
+
+    // Effect for update canvas size on resize
     useEffect(() => {
         const updateCanvasSize = () => {
             if (containerRef.current) {
@@ -29,17 +43,48 @@ export function Canvas({ roomId, socket }: {
                 setCanvasSize({ width, height });
             }
         };
-
         // Initial default canvas size
         updateCanvasSize();
         window.addEventListener('resize', updateCanvasSize);
-
         return () => {
             window.removeEventListener('resize', updateCanvasSize);
         }
-
     }, []);
 
+    // handle socket messages (user_count and cursor_move)
+    useEffect(() => {
+        if (!socket) return;
+        const onMessage = (ev: MessageEvent) => {
+            let data: any;
+            try {
+                data = JSON.parse(ev.data);
+            } catch {
+                return;
+            }
+
+            if (data.type === "user_count") {
+                setUserCount(data.count);
+            } else if (data.type === "cursor_move") {
+                // update ref directly
+                liveCursorsRef.current = {
+                    ...liveCursorsRef.current,
+                    [data.userId]: { x: data.x, y: data.y, color: data.color || "#ff0" }
+                };
+            } else if (data.type === "system") {
+                // optionally capture your userId/color from welcome message
+                if (data.yourUserId) myUserIdRef.current = data.yourUserId;
+                if (data.yourColor) myColorRef.current = data.yourColor;
+                if (data.userId) {
+                    // if a user left, remove them from ref
+                    const copy = { ...liveCursorsRef.current };
+                    delete copy[data.userId];
+                    liveCursorsRef.current = copy;
+                }
+            };
+        };
+        socket.addEventListener("message", onMessage);
+        return () => socket.removeEventListener("message", onMessage);
+    }, [socket]);
 
     // Handle socket messages for user count
     useEffect(() => {
@@ -56,12 +101,12 @@ export function Canvas({ roomId, socket }: {
 
     // Initailize drawing logic
     useEffect(() => {
-        if (canvasRef.current && canvasSize.width > 0) {
-            const cleanup = initDraw(canvasRef.current, roomId, socket, selectedTool);
-            return () => {
-                if (cleanup) { cleanup(); }
-            };
-        }
+        if (!canvasRef.current || canvasSize.width <= 0) { return; }
+        const cleanup = initDraw(canvasRef.current, roomId, socket, selectedTool, liveCursorsRef, myColorRef);
+        return () => {
+            if (cleanup) { cleanup(); }
+        };
+
     }, [selectedTool, socket, roomId, canvasSize.width, canvasSize.height]);
 
     const handleLogout = () => {

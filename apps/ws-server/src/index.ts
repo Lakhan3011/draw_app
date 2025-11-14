@@ -7,7 +7,8 @@ const wss = new WebSocketServer({ port: 8080 });
 
 interface User {
     socket: WebSocket,
-    userId: string
+    userId: string,
+    color?: string
 }
 
 const rooms = new Map<string, Set<User>>();
@@ -98,7 +99,8 @@ wss.on('connection', (socket, req) => {
         // Does this person has access to join this specific room
         if (parsedData.type === "join") {
             currentRoom = parsedData.roomId;
-            currentUser = { socket, userId };
+            const color = parsedData.color || `hsl(${Math.floor(Math.random() * 360)},70%, 60%)`;
+            currentUser = { socket, userId, color };
 
             joinRoom(currentRoom, currentUser);
 
@@ -107,7 +109,9 @@ wss.on('connection', (socket, req) => {
                 JSON.stringify({
                     type: "system",
                     message: `Welcome ${userId}, you joined room ${currentRoom}`,
-                    users: getUserCount(currentRoom)
+                    users: getUserCount(currentRoom),
+                    yourColor: color,
+                    yourUserId: userId
                 })
             )
 
@@ -117,6 +121,18 @@ wss.on('connection', (socket, req) => {
                 message: `${userId} joined room ${currentRoom}`,
                 users: getUserCount(currentRoom)
             })
+            return;
+        }
+
+        if (parsedData.type === "cursor_move" && currentRoom && currentUser) {
+            broadcast(currentRoom, {
+                type: "cursor_move",
+                userId: currentUser.userId,
+                x: parsedData.x,
+                y: parsedData.y,
+                color: currentUser.color
+            });
+            return;
         }
 
         if (parsedData.type === "leave" && currentUser) {
@@ -125,8 +141,11 @@ wss.on('connection', (socket, req) => {
             broadcast(currentRoom, {
                 type: "system",
                 message: `${currentUser.userId} has left the room ${currentRoom}`,
-                users: getUserCount(currentRoom)
-            })
+                users: getUserCount(currentRoom),
+                userId
+            });
+
+            return;
         }
 
 
