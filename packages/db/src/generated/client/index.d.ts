@@ -2224,10 +2224,12 @@ export namespace Prisma {
 
   export type RoomAvgAggregateOutputType = {
     id: number | null
+    maxParticipants: number | null
   }
 
   export type RoomSumAggregateOutputType = {
     id: number | null
+    maxParticipants: number | null
   }
 
   export type RoomMinAggregateOutputType = {
@@ -2235,6 +2237,7 @@ export namespace Prisma {
     slug: string | null
     createdAt: Date | null
     adminId: string | null
+    maxParticipants: number | null
   }
 
   export type RoomMaxAggregateOutputType = {
@@ -2242,6 +2245,7 @@ export namespace Prisma {
     slug: string | null
     createdAt: Date | null
     adminId: string | null
+    maxParticipants: number | null
   }
 
   export type RoomCountAggregateOutputType = {
@@ -2249,16 +2253,19 @@ export namespace Prisma {
     slug: number
     createdAt: number
     adminId: number
+    maxParticipants: number
     _all: number
   }
 
 
   export type RoomAvgAggregateInputType = {
     id?: true
+    maxParticipants?: true
   }
 
   export type RoomSumAggregateInputType = {
     id?: true
+    maxParticipants?: true
   }
 
   export type RoomMinAggregateInputType = {
@@ -2266,6 +2273,7 @@ export namespace Prisma {
     slug?: true
     createdAt?: true
     adminId?: true
+    maxParticipants?: true
   }
 
   export type RoomMaxAggregateInputType = {
@@ -2273,6 +2281,7 @@ export namespace Prisma {
     slug?: true
     createdAt?: true
     adminId?: true
+    maxParticipants?: true
   }
 
   export type RoomCountAggregateInputType = {
@@ -2280,6 +2289,7 @@ export namespace Prisma {
     slug?: true
     createdAt?: true
     adminId?: true
+    maxParticipants?: true
     _all?: true
   }
 
@@ -2374,6 +2384,7 @@ export namespace Prisma {
     slug: string
     createdAt: Date
     adminId: string
+    maxParticipants: number
     _count: RoomCountAggregateOutputType | null
     _avg: RoomAvgAggregateOutputType | null
     _sum: RoomSumAggregateOutputType | null
@@ -2400,6 +2411,7 @@ export namespace Prisma {
     slug?: boolean
     createdAt?: boolean
     adminId?: boolean
+    maxParticipants?: boolean
     admin?: boolean | UserDefaultArgs<ExtArgs>
     chats?: boolean | Room$chatsArgs<ExtArgs>
     _count?: boolean | RoomCountOutputTypeDefaultArgs<ExtArgs>
@@ -2410,6 +2422,7 @@ export namespace Prisma {
     slug?: boolean
     createdAt?: boolean
     adminId?: boolean
+    maxParticipants?: boolean
     admin?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["room"]>
 
@@ -2418,6 +2431,7 @@ export namespace Prisma {
     slug?: boolean
     createdAt?: boolean
     adminId?: boolean
+    maxParticipants?: boolean
     admin?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["room"]>
 
@@ -2426,9 +2440,10 @@ export namespace Prisma {
     slug?: boolean
     createdAt?: boolean
     adminId?: boolean
+    maxParticipants?: boolean
   }
 
-  export type RoomOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "createdAt" | "adminId", ExtArgs["result"]["room"]>
+  export type RoomOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "createdAt" | "adminId" | "maxParticipants", ExtArgs["result"]["room"]>
   export type RoomInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     admin?: boolean | UserDefaultArgs<ExtArgs>
     chats?: boolean | Room$chatsArgs<ExtArgs>
@@ -2452,6 +2467,7 @@ export namespace Prisma {
       slug: string
       createdAt: Date
       adminId: string
+      maxParticipants: number
     }, ExtArgs["result"]["room"]>
     composites: {}
   }
@@ -2881,6 +2897,7 @@ export namespace Prisma {
     readonly slug: FieldRef<"Room", 'String'>
     readonly createdAt: FieldRef<"Room", 'DateTime'>
     readonly adminId: FieldRef<"Room", 'String'>
+    readonly maxParticipants: FieldRef<"Room", 'Int'>
   }
     
 
@@ -4439,7 +4456,8 @@ export namespace Prisma {
     id: 'id',
     slug: 'slug',
     createdAt: 'createdAt',
-    adminId: 'adminId'
+    adminId: 'adminId',
+    maxParticipants: 'maxParticipants'
   };
 
   export type RoomScalarFieldEnum = (typeof RoomScalarFieldEnum)[keyof typeof RoomScalarFieldEnum]
@@ -4609,6 +4627,7 @@ export namespace Prisma {
     slug?: StringFilter<"Room"> | string
     createdAt?: DateTimeFilter<"Room"> | Date | string
     adminId?: StringFilter<"Room"> | string
+    maxParticipants?: IntFilter<"Room"> | number
     admin?: XOR<UserScalarRelationFilter, UserWhereInput>
     chats?: ChatListRelationFilter
   }
@@ -4618,6 +4637,7 @@ export namespace Prisma {
     slug?: SortOrder
     createdAt?: SortOrder
     adminId?: SortOrder
+    maxParticipants?: SortOrder
     admin?: UserOrderByWithRelationInput
     chats?: ChatOrderByRelationAggregateInput
   }
@@ -4630,6 +4650,7 @@ export namespace Prisma {
     NOT?: RoomWhereInput | RoomWhereInput[]
     createdAt?: DateTimeFilter<"Room"> | Date | string
     adminId?: StringFilter<"Room"> | string
+    maxParticipants?: IntFilter<"Room"> | number
     admin?: XOR<UserScalarRelationFilter, UserWhereInput>
     chats?: ChatListRelationFilter
   }, "id" | "slug">
@@ -4639,6 +4660,7 @@ export namespace Prisma {
     slug?: SortOrder
     createdAt?: SortOrder
     adminId?: SortOrder
+    maxParticipants?: SortOrder
     _count?: RoomCountOrderByAggregateInput
     _avg?: RoomAvgOrderByAggregateInput
     _max?: RoomMaxOrderByAggregateInput
@@ -4654,6 +4676,7 @@ export namespace Prisma {
     slug?: StringWithAggregatesFilter<"Room"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Room"> | Date | string
     adminId?: StringWithAggregatesFilter<"Room"> | string
+    maxParticipants?: IntWithAggregatesFilter<"Room"> | number
   }
 
   export type ChatWhereInput = {
@@ -4778,6 +4801,7 @@ export namespace Prisma {
   export type RoomCreateInput = {
     slug: string
     createdAt?: Date | string
+    maxParticipants?: number
     admin: UserCreateNestedOneWithoutRoomsInput
     chats?: ChatCreateNestedManyWithoutRoomInput
   }
@@ -4787,12 +4811,14 @@ export namespace Prisma {
     slug: string
     createdAt?: Date | string
     adminId: string
+    maxParticipants?: number
     chats?: ChatUncheckedCreateNestedManyWithoutRoomInput
   }
 
   export type RoomUpdateInput = {
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
     admin?: UserUpdateOneRequiredWithoutRoomsNestedInput
     chats?: ChatUpdateManyWithoutRoomNestedInput
   }
@@ -4802,6 +4828,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     adminId?: StringFieldUpdateOperationsInput | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
     chats?: ChatUncheckedUpdateManyWithoutRoomNestedInput
   }
 
@@ -4810,11 +4837,13 @@ export namespace Prisma {
     slug: string
     createdAt?: Date | string
     adminId: string
+    maxParticipants?: number
   }
 
   export type RoomUpdateManyMutationInput = {
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
   }
 
   export type RoomUncheckedUpdateManyInput = {
@@ -4822,6 +4851,7 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     adminId?: StringFieldUpdateOperationsInput | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
   }
 
   export type ChatCreateInput = {
@@ -5015,10 +5045,12 @@ export namespace Prisma {
     slug?: SortOrder
     createdAt?: SortOrder
     adminId?: SortOrder
+    maxParticipants?: SortOrder
   }
 
   export type RoomAvgOrderByAggregateInput = {
     id?: SortOrder
+    maxParticipants?: SortOrder
   }
 
   export type RoomMaxOrderByAggregateInput = {
@@ -5026,6 +5058,7 @@ export namespace Prisma {
     slug?: SortOrder
     createdAt?: SortOrder
     adminId?: SortOrder
+    maxParticipants?: SortOrder
   }
 
   export type RoomMinOrderByAggregateInput = {
@@ -5033,10 +5066,12 @@ export namespace Prisma {
     slug?: SortOrder
     createdAt?: SortOrder
     adminId?: SortOrder
+    maxParticipants?: SortOrder
   }
 
   export type RoomSumOrderByAggregateInput = {
     id?: SortOrder
+    maxParticipants?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -5221,6 +5256,14 @@ export namespace Prisma {
     set?: Date | string
   }
 
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type UserUpdateOneRequiredWithoutRoomsNestedInput = {
     create?: XOR<UserCreateWithoutRoomsInput, UserUncheckedCreateWithoutRoomsInput>
     connectOrCreate?: UserCreateOrConnectWithoutRoomsInput
@@ -5241,14 +5284,6 @@ export namespace Prisma {
     update?: ChatUpdateWithWhereUniqueWithoutRoomInput | ChatUpdateWithWhereUniqueWithoutRoomInput[]
     updateMany?: ChatUpdateManyWithWhereWithoutRoomInput | ChatUpdateManyWithWhereWithoutRoomInput[]
     deleteMany?: ChatScalarWhereInput | ChatScalarWhereInput[]
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type ChatUncheckedUpdateManyWithoutRoomNestedInput = {
@@ -5432,6 +5467,7 @@ export namespace Prisma {
   export type RoomCreateWithoutAdminInput = {
     slug: string
     createdAt?: Date | string
+    maxParticipants?: number
     chats?: ChatCreateNestedManyWithoutRoomInput
   }
 
@@ -5439,6 +5475,7 @@ export namespace Prisma {
     id?: number
     slug: string
     createdAt?: Date | string
+    maxParticipants?: number
     chats?: ChatUncheckedCreateNestedManyWithoutRoomInput
   }
 
@@ -5497,6 +5534,7 @@ export namespace Prisma {
     slug?: StringFilter<"Room"> | string
     createdAt?: DateTimeFilter<"Room"> | Date | string
     adminId?: StringFilter<"Room"> | string
+    maxParticipants?: IntFilter<"Room"> | number
   }
 
   export type ChatUpsertWithWhereUniqueWithoutUserInput = {
@@ -5640,6 +5678,7 @@ export namespace Prisma {
   export type RoomCreateWithoutChatsInput = {
     slug: string
     createdAt?: Date | string
+    maxParticipants?: number
     admin: UserCreateNestedOneWithoutRoomsInput
   }
 
@@ -5648,6 +5687,7 @@ export namespace Prisma {
     slug: string
     createdAt?: Date | string
     adminId: string
+    maxParticipants?: number
   }
 
   export type RoomCreateOrConnectWithoutChatsInput = {
@@ -5698,6 +5738,7 @@ export namespace Prisma {
   export type RoomUpdateWithoutChatsInput = {
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
     admin?: UserUpdateOneRequiredWithoutRoomsNestedInput
   }
 
@@ -5706,12 +5747,14 @@ export namespace Prisma {
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     adminId?: StringFieldUpdateOperationsInput | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
   }
 
   export type RoomCreateManyAdminInput = {
     id?: number
     slug: string
     createdAt?: Date | string
+    maxParticipants?: number
   }
 
   export type ChatCreateManyUserInput = {
@@ -5723,6 +5766,7 @@ export namespace Prisma {
   export type RoomUpdateWithoutAdminInput = {
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
     chats?: ChatUpdateManyWithoutRoomNestedInput
   }
 
@@ -5730,6 +5774,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
     chats?: ChatUncheckedUpdateManyWithoutRoomNestedInput
   }
 
@@ -5737,6 +5782,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     slug?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxParticipants?: IntFieldUpdateOperationsInput | number
   }
 
   export type ChatUpdateWithoutUserInput = {

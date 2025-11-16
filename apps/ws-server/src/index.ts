@@ -95,21 +95,51 @@ wss.on('connection', (socket, req) => {
     socket.on('message', async (message) => {
         const parsedData = JSON.parse(message.toString());
 
-        // TODO: Does this roomID exists in db 
         // Does this person has access to join this specific room
         if (parsedData.type === "join") {
             currentRoom = parsedData.roomId;
             const color = parsedData.color || `hsl(${Math.floor(Math.random() * 360)},70%, 60%)`;
             currentUser = { socket, userId, color };
 
+            const roomSize = getUserCount(currentRoom);
+
+            // check if resective room exists in DB
+            const dbRoom = await prisma.room.findUnique({
+                where: {
+                    id: Number(currentRoom)
+                }
+            });
+
+            if (!dbRoom) {
+                socket.send(JSON.stringify({
+                    type: "room error",
+                    message: "Room does not exist"
+                }));
+                socket.close();
+                return;
+            }
+
+            // check room size for max participants
+            if (roomSize >= dbRoom.maxParticipants) {
+                socket.send(JSON.stringify({
+                    type: "room_full",
+                    message: "Room is full. Please create another one"
+                }));
+                socket.close();
+                return;
+            }
+
+            // Now add user 
             joinRoom(currentRoom, currentUser);
+
+            const updatedCount = getUserCount(currentRoom);
 
             // Notify to new user
             socket.send(
                 JSON.stringify({
                     type: "system",
                     message: `Welcome ${userId}, you joined room ${currentRoom}`,
-                    users: getUserCount(currentRoom),
+                    users: updatedCount,
                     yourColor: color,
                     yourUserId: userId
                 })
@@ -117,11 +147,11 @@ wss.on('connection', (socket, req) => {
 
             // Notify to others
             broadcast(currentRoom, {
-                type: "system",
+                type: "User_count",
                 message: `${userId} joined room ${currentRoom}`,
-                users: getUserCount(currentRoom)
-            })
-            return;
+                users: updatedCount,
+                isFull: updatedCount >= dbRoom.maxParticipants
+            });
         }
 
         if (parsedData.type === "cursor_move" && currentRoom && currentUser) {

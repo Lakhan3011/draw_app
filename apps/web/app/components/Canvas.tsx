@@ -6,6 +6,7 @@ import { IconButton } from "./IconButton";
 import { Circle, HandGrab, Pencil, RectangleHorizontal } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 import { useRouter } from "next/navigation";
+import { toast } from "@repo/ui/components/ui/sonner";
 
 type ShapeType = "rect" | "circle" | "line" | "hand";
 export type CursorData = { x: number; y: number; color: string };
@@ -51,6 +52,7 @@ export function Canvas({ roomId, socket }: {
         }
     }, []);
 
+
     // handle socket messages (user_count and cursor_move)
     useEffect(() => {
         if (!socket) return;
@@ -80,7 +82,17 @@ export function Canvas({ roomId, socket }: {
                     delete copy[data.userId];
                     liveCursorsRef.current = copy;
                 }
-            };
+            } else if (data.type === "room_full") {
+                toast.warning("Room is Full", {
+                    description: "Redirecting to rooms...",
+                    position: "top-center",
+                    style: {
+                        background: "red",
+                        color: "white"
+                    }
+                })
+                router.push('/existing-rooms');
+            }
         };
         socket.addEventListener("message", onMessage);
         return () => socket.removeEventListener("message", onMessage);

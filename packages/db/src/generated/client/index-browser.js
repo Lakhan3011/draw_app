@@ -132,7 +132,8 @@ exports.Prisma.RoomScalarFieldEnum = {
   id: 'id',
   slug: 'slug',
   createdAt: 'createdAt',
-  adminId: 'adminId'
+  adminId: 'adminId',
+  maxParticipants: 'maxParticipants'
 };
 
 exports.Prisma.ChatScalarFieldEnum = {

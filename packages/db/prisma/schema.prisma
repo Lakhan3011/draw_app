@@ -22,11 +22,12 @@ model User {
 }
 
 model Room {
-  id        Int     @id @default(autoincrement())
-  slug      String  @unique
-  createdAt DateTime @default(now())
+  id        Int       @id @default(autoincrement())
+  slug      String    @unique
+  createdAt DateTime  @default(now())
   adminId   String
-  admin     User   @relation(fields: [adminId], references: [id])
+  admin     User      @relation(fields: [adminId], references: [id])
+  maxParticipants Int @default(10)
   chats     Chat[]
 }
 
@@ -36,5 +37,5 @@ model Chat {
   userId    String
   roomId    Int
   user      User    @relation(fields: [userId], references: [id])
-  room      Room    @relation(fields: [roomId], references: [id])
+  room      Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }

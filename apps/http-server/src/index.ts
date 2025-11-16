@@ -125,6 +125,57 @@ app.post('/room', userMiddleware, async (req: AuthRequest, res: Response) => {
     }
 })
 
+app.delete('/delete-room/:roomId', userMiddleware, async (req: AuthRequest, res: Response) => {
+    const roomId = Number(req.params.roomId);
+    const userId = req.userId;
+
+    if (isNaN(roomId)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid room ID"
+        });
+    }
+
+    try {
+        const room = await prisma.room.findUnique({
+            where: {
+                id: roomId
+            },
+        });
+
+        if (!room) {
+            return res.status(404).json({
+                success: false,
+                message: "Room not found",
+            });
+        }
+
+        if (room.adminId !== userId) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not allowed to delete this room",
+            });
+        }
+
+        await prisma.room.delete({
+            where: {
+                id: roomId
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: `${room.slug} is deleted successfully`
+        })
+    } catch (error) {
+        console.error("Delete room error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+});
+
 app.get('/existing-rooms', userMiddleware, async (req: AuthRequest, res: Response) => {
     const userId = req.userId;
     if (!userId) {

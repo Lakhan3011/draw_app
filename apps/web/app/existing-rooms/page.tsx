@@ -3,10 +3,10 @@
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 import { Badge } from "@repo/ui/components/ui/badge";
-import { Users, Clock, Plus, LogOutIcon } from "lucide-react";
+import { Users, Clock, Plus, Trash2Icon } from "lucide-react";
 import { toast } from "@repo/ui/components/ui/sonner";
-import { useQuery } from "@tanstack/react-query";
-import { GetExistingRooms } from "@/services/room";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { DeleteRoom, GetExistingRooms } from "@/services/room";
 import { useRouter } from "next/navigation";
 import CreateRoom from "../components/CreateRoom";
 import { useEffect, useState } from "react";
@@ -16,7 +16,6 @@ interface Room {
     id: string,
     slug: string,
     isActive: boolean,
-    participants: number,
     maxParticipants: number,
     createdAt: string
 }
@@ -27,10 +26,39 @@ export default function Rooms() {
     const router = useRouter();
     const [modalOpen, setModalOpen] = useState(false);
 
+    const queryClient = useQueryClient();
     const { data: rooms, isLoading, error } = useQuery({
         queryKey: ["rooms"],
         queryFn: GetExistingRooms
     });
+
+    // handle delete
+    const deleteRoomMutation = useMutation({
+        mutationFn: (roomId: string) => DeleteRoom(roomId),
+        onSuccess: (data) => {
+            toast.success("Success", {
+                description: data.message,
+                position: "top-center",
+                style: {
+                    background: "green",
+                    color: "white"
+                }
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["rooms"]
+            })
+        },
+        onError: (error: any) => {
+            toast.error("Error", {
+                description: error.response?.data?.message,
+                position: "top-center",
+                style: {
+                    background: "red",
+                    color: "white",
+                }
+            })
+        }
+    })
 
 
     useEffect(() => {
@@ -102,14 +130,19 @@ export default function Rooms() {
                                 <CardHeader>
                                     <div className="flex items-start justify-between">
                                         <CardTitle className="text-xl">{room.slug}</CardTitle>
-                                        <Badge variant={room.isActive ? "default" : "secondary"}>
-                                            {room.isActive ? "Active" : "Inactive"}
+                                        <Badge variant={"secondary"}>
+                                            <button
+                                                disabled={deleteRoomMutation.isPending}
+                                                onClick={() => deleteRoomMutation.mutate(room.id)}
+                                                className="cursor-pointer"
+                                            >
+                                                <Trash2Icon className="w-4 h-4" /></button>
                                         </Badge>
                                     </div>
                                     <CardDescription className="flex items-center gap-4 mt-2">
                                         <span className="flex items-center gap-1">
                                             <Users className="w-4 h-4" />
-                                            {room.participants}/{room.maxParticipants}
+                                            Max Participants: {room.maxParticipants}
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <Clock className="w-4 h-4" />
@@ -121,10 +154,9 @@ export default function Rooms() {
                                     <Button
                                         className="w-full"
                                         onClick={() => handleJoinRoom(room.id)}
-                                        disabled={room.participants >= room.maxParticipants}
                                         variant={"hero"}
                                     >
-                                        {room.participants >= room.maxParticipants ? "Room Full" : "Join Room"}
+                                        Join Room
                                     </Button>
                                 </CardContent>
                             </Card>
