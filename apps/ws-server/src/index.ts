@@ -8,7 +8,8 @@ const wss = new WebSocketServer({ port: 8080 });
 interface User {
     socket: WebSocket,
     userId: string,
-    color?: string
+    color?: string,
+    role?: string
 }
 
 const rooms = new Map<string, Set<User>>();
@@ -70,36 +71,67 @@ function checkUser(token: string): string | null {
     }
 }
 
+// verify invite token
+function verifyInvite(inviteToken: string) {
+    try {
+        const payload = jwt.verify(inviteToken, JWT_SECRET) as any;
+        if (!payload || !payload.roomId || !payload.perm) return null;
+        if (!["view", "edit"].includes(payload.perm)) return null;
+        return { roomId: String(payload.roomId), perm: payload.perm };
+    } catch (error) {
+        return null;
+    }
+}
+
 
 wss.on('connection', (socket, req) => {
     // console.log('Client connected');
-    const url = req.url;
+    const url = req.url || "";
     if (!url) {
         socket.close();
         return;
     }
 
-    const queryParams = new URLSearchParams(url.split('?')[1]);
-    const token = queryParams.get("token") || "";
-    const userId = checkUser(token);
+    const queryParams = new URLSearchParams(url.split('?')[1] || "");
+    const authtoken = queryParams.get("token") || "";
+    const inviteToken = queryParams.get("invite") || "";
 
-    if (!userId) {
+    const authUserId = checkUser(authtoken);
+    const invite = inviteToken ? verifyInvite(inviteToken) : null;
+
+    if (!authUserId) {
         socket.close();
         return;
     }
 
-
+    // if invite exists, be sure it matches intended room on join event later
     let currentRoom = "";
-    let currentUser: User | null = null;
+    let currentUser: User | null = null as (User & { role?: "viewer" | "editor" }) | null;
 
     socket.on('message', async (message) => {
         const parsedData = JSON.parse(message.toString());
 
         // Does this person has access to join this specific room
         if (parsedData.type === "join") {
-            currentRoom = parsedData.roomId;
+            currentRoom = String(parsedData.roomId);
+
+            // if invite given, assert room matches and set the role
+            if (invite) {
+                if (invite?.roomId !== currentRoom) {
+                    socket.send(JSON.stringify({
+                        type: "error",
+                        message: "Invite does not match room"
+                    }));
+                    socket.close();
+                    return;
+                }
+            }
+
+            // ownership
+            const role = invite ? (invite.perm === "view" ? "viewer" : "editor") : "editor";
+
             const color = parsedData.color || `hsl(${Math.floor(Math.random() * 360)},70%, 60%)`;
-            currentUser = { socket, userId, color };
+            currentUser = { socket, userId: authUserId || `anon_${Math.random().toString(36).slice(2, 8)}`, color, role };
 
             const roomSize = getUserCount(currentRoom);
 
@@ -138,17 +170,17 @@ wss.on('connection', (socket, req) => {
             socket.send(
                 JSON.stringify({
                     type: "system",
-                    message: `Welcome ${userId}, you joined room ${currentRoom}`,
+                    message: `Welcome,  you joined room ${currentRoom}`,
                     users: updatedCount,
                     yourColor: color,
-                    yourUserId: userId
+                    role,
                 })
             )
 
             // Notify to others
             broadcast(currentRoom, {
-                type: "User_count",
-                message: `${userId} joined room ${currentRoom}`,
+                type: "system",
+                message: `${currentUser.userId} joined room ${currentRoom}`,
                 users: updatedCount,
                 isFull: updatedCount >= dbRoom.maxParticipants
             });
@@ -172,7 +204,7 @@ wss.on('connection', (socket, req) => {
                 type: "system",
                 message: `${currentUser.userId} has left the room ${currentRoom}`,
                 users: getUserCount(currentRoom),
-                userId
+                authUserId
             });
 
             return;
@@ -182,6 +214,13 @@ wss.on('connection', (socket, req) => {
         // TODO: Rate limit msg not too long
         // Auth: now anyone sends msg to any room, if one subs to room1, he mays sends msg to room2
         if (parsedData.type === "chat" && currentRoom && currentUser) {
+            if (currentUser.role === "viewer") {
+                socket.send(JSON.stringify({
+                    type: "error",
+                    message: "Read-only invite: cannot modify"
+                }));
+                return;
+            }
             const msg = {
                 type: "chat",
                 room: currentRoom,
@@ -206,6 +245,11 @@ wss.on('connection', (socket, req) => {
         if (currentUser && currentRoom) {
             console.log(`User ${currentUser.userId} disconnected from ${currentRoom}`)
             leaveRoom(currentRoom, currentUser);
+            broadcast(currentRoom, {
+                type: "system",
+                message: `${currentUser.userId} left`,
+                users: getUserCount(currentRoom)
+            });
         }
     });
-})
+});

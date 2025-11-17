@@ -13,11 +13,7 @@ app.use(express.json());
 const PORT = 8000;
 app.use(cors());
 
-app.get('/hi', (req, res) => {
-    res.json({
-        message: "hi from hhtp server"
-    })
-});
+
 
 app.post('/signup', async (req, res) => {
     const { name, email, password } = req.body;
@@ -263,6 +259,37 @@ app.get('/room/:slug', async (req, res) => {
     }
 })
 
+app.post('/rooms/:roomId/share', userMiddleware, async (req: AuthRequest, res: Response) => {
+    const roomId = Number(req.params.roomId);
+    const userId = req.userId;
+    if (isNaN(roomId)) {
+        return res.status(400).send({
+            message: "Invalid room Id"
+        });
+    };
+
+    const room = await prisma.room.findUnique({
+        where: {
+            id: roomId
+        }
+    });
+
+    if (!room) return res.status(404).send({ message: "Room not found" });
+    if (room.adminId !== userId) {
+        return res.status(403).send({ message: "Not allowed to share" });
+    }
+
+    // token
+    const viewToken = jwt.sign({ roomId, perm: "view" }, JWT_SECRET, { expiresIn: '7h' });
+    const editToken = jwt.sign({ roomId, perm: "edit" }, JWT_SECRET, { expiresIn: "7h" });
+
+    const frontendBase = "http://localhost:3000";
+
+    return res.json({
+        viewOnlyUrl: `${frontendBase}/room/${room.id}?token=${encodeURIComponent(viewToken)}`,
+        editUrl: `${frontendBase}/room/${room.id}?token=${encodeURIComponent(editToken)}`
+    });
+});
 
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`)

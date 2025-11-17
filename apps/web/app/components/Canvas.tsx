@@ -5,8 +5,11 @@ import { initDraw } from "@/draw";
 import { IconButton } from "./IconButton";
 import { Circle, HandGrab, Pencil, RectangleHorizontal } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@repo/ui/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { toast } from "@repo/ui/components/ui/sonner";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ShareRoom } from "@/services/room";
 
 type ShapeType = "rect" | "circle" | "line" | "hand";
 export type CursorData = { x: number; y: number; color: string };
@@ -24,6 +27,7 @@ export function Canvas({ roomId, socket }: {
         width: 0,
         height: 0
     });
+
 
     // React state for user count (UI overlay)
     const [userCount, setUserCount] = useState(0);
@@ -144,6 +148,23 @@ export function Canvas({ roomId, socket }: {
                     variant={"destructive"}
                     onClick={handleLogout}
                 >Log Out</Button>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant={"canvas"}>Share</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Live Collaboration</DialogTitle>
+                            <DialogDescription>Invite people to collabrate on your drawing.</DialogDescription>
+                        </DialogHeader>
+                        <Button
+                            onClick={() => navigator.clipboard.writeText("Edit url")}
+                        >Edit URL</Button>
+                        <Button
+                            onClick={() => navigator.clipboard.writeText("View url")}
+                        >View URL</Button>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             {/* Floating user count */}

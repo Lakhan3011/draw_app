@@ -1,5 +1,6 @@
 import { BACKEND_URL } from "@/config"
 import axios from "axios"
+import { Backpack } from "lucide-react";
 
 
 export async function CreateNewRoom(roomName: {
@@ -37,3 +38,11 @@ export async function DeleteRoom(roomId: string) {
     return res.data;
 }
 
+export async function ShareRoom(roomId: string) {
+    const res = await axios.post(`${BACKEND_URL}/rooms/${roomId}/share`, {
+        headers: {
+            Authorization: localStorage.getItem("token"),
+        }
+    });
+    return res.data;
+}
