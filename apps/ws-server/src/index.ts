@@ -86,6 +86,7 @@ function verifyInvite(inviteToken: string) {
 
 wss.on('connection', (socket, req) => {
     // console.log('Client connected');
+
     const url = req.url || "";
     if (!url) {
         socket.close();
@@ -173,6 +174,7 @@ wss.on('connection', (socket, req) => {
                     message: `Welcome,  you joined room ${currentRoom}`,
                     users: updatedCount,
                     yourColor: color,
+                    yourUserId: currentUser.userId,
                     role,
                 })
             )
@@ -248,7 +250,8 @@ wss.on('connection', (socket, req) => {
             broadcast(currentRoom, {
                 type: "system",
                 message: `${currentUser.userId} left`,
-                users: getUserCount(currentRoom)
+                users: getUserCount(currentRoom),
+                userId: currentUser.userId
             });
         }
     });

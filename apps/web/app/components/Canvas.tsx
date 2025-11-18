@@ -27,6 +27,7 @@ export function Canvas({ roomId, socket }: {
         width: 0,
         height: 0
     });
+    const [role, setRole] = useState<"viewer" | "editor">("viewer");
 
 
     // React state for user count (UI overlay)
@@ -76,7 +77,8 @@ export function Canvas({ roomId, socket }: {
                     ...liveCursorsRef.current,
                     [data.userId]: { x: data.x, y: data.y, color: data.color || "#ff0" }
                 };
-            } else if (data.type === "system") {
+            } else if (data.type === "system" || data.role) {
+                setRole(data.role);
                 // optionally capture your userId/color from welcome message
                 if (data.yourUserId) myUserIdRef.current = data.yourUserId;
                 if (data.yourColor) myColorRef.current = data.yourColor;
@@ -103,22 +105,22 @@ export function Canvas({ roomId, socket }: {
     }, [socket]);
 
     // Handle socket messages for user count
-    useEffect(() => {
-        const handleSocketUserCount = (event: MessageEvent) => {
-            const data = JSON.parse(event.data);
-            if (data.type === "user_count") {
-                setUserCount(data.count);
-            }
-        };
-        socket.addEventListener('message', handleSocketUserCount);
-        return () => socket.removeEventListener('message', handleSocketUserCount);
-    }, [socket]);
+    // useEffect(() => {
+    //     const handleSocketUserCount = (event: MessageEvent) => {
+    //         const data = JSON.parse(event.data);
+    //         if (data.type === "user_count") {
+    //             setUserCount(data.count);
+    //         }
+    //     };
+    //     socket.addEventListener('message', handleSocketUserCount);
+    //     return () => socket.removeEventListener('message', handleSocketUserCount);
+    // }, [socket]);
 
 
     // Initailize drawing logic
     useEffect(() => {
         if (!canvasRef.current || canvasSize.width <= 0) { return; }
-        const cleanup = initDraw(canvasRef.current, roomId, socket, selectedTool, liveCursorsRef, myColorRef);
+        const cleanup = initDraw(canvasRef.current, roomId, socket, selectedTool, liveCursorsRef, myColorRef, role);
         return () => {
             if (cleanup) { cleanup(); }
         };
@@ -138,7 +140,7 @@ export function Canvas({ roomId, socket }: {
                 height={canvasSize.height}
                 className={`${selectedTool === "hand" ? 'cursor-grabbing' : 'cursor-crosshair'}`}
             />
-            <TopBar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
+            <TopBar disabled={role === "viewer"} setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
             <div className="fixed top-4 right-2 flex items-center gap-5 z-50">
                 <Button
                     variant={"ghost"}
@@ -171,14 +173,28 @@ export function Canvas({ roomId, socket }: {
             <div className="absolute top-4 left-4 bg-gray-800/90 text-white px-4 py-2 rounded-lg text-sm shadow-md">
                 <span> 👥 {userCount} {userCount === 1 ? "user" : "users"} online </span>
             </div>
+
+            {/* visual badge */}
+            {role === "viewer" && (
+                <div className="fixed top-4 left-2 px-3 py-1 bg-yellow-600 rounded text-black">
+                    View Only
+                </div>
+            )}
         </div>
     )
 }
 
-function TopBar({ selectedTool, setSelectedTool }: {
+function TopBar({ disabled, selectedTool, setSelectedTool }: {
     selectedTool: ShapeType,
-    setSelectedTool: (s: ShapeType) => void
+    setSelectedTool: (s: ShapeType) => void,
+    disabled: any
 }) {
+
+    const handleClick = (ShapeType: any) => {
+        if (disabled) return;
+        setSelectedTool(ShapeType)
+    }
+
     return (
         <div>
             <div className="fixed top-4 left-1/2 -translate-x-1/2  flex items-center justify-center px-4 py-2 gap-3 rounded-xl shadow-lg bg-gray-800/90 backdrop-blur-md border border-white/10 z-50">
