@@ -11,10 +11,10 @@ export default function Room({ params }: {
     const roomId = React.use(params).slug;
     const search = useSearchParams();
     const authToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    const inviteToken = search.get("token") || null;
+    const inviteToken = search.get("invite") || null;
 
 
-    const { socket, loading } = useSocket({
+    const { socket, loading, role } = useSocket({
         roomId,
         authToken,
         inviteToken
@@ -45,6 +45,7 @@ export default function Room({ params }: {
             <Canvas
                 roomId={roomId}
                 socket={socket}
+                role={role}
             />
         </div>
     )

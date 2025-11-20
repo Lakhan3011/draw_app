@@ -286,8 +286,8 @@ app.post('/rooms/:roomId/share', userMiddleware, async (req: AuthRequest, res: R
     const frontendBase = "http://localhost:3000";
 
     return res.json({
-        viewOnlyUrl: `${frontendBase}/room/${room.id}?token=${encodeURIComponent(viewToken)}`,
-        editUrl: `${frontendBase}/room/${room.id}?token=${encodeURIComponent(editToken)}`
+        viewOnlyUrl: `${frontendBase}/room/${room.id}?invite=${encodeURIComponent(viewToken)}`,
+        editUrl: `${frontendBase}/room/${room.id}?invite=${encodeURIComponent(editToken)}`
     });
 });
 

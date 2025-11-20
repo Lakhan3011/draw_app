@@ -7,9 +7,10 @@ const wss = new WebSocketServer({ port: 8080 });
 
 interface User {
     socket: WebSocket,
-    userId: string,
-    color?: string,
-    role?: string
+    userId: string;
+    color?: string;
+    role?: string;
+    isAnonymous: boolean;
 }
 
 const rooms = new Map<string, Set<User>>();
@@ -97,13 +98,9 @@ wss.on('connection', (socket, req) => {
     const authtoken = queryParams.get("token") || "";
     const inviteToken = queryParams.get("invite") || "";
 
-    const authUserId = checkUser(authtoken);
+    const authUserId = authtoken ? checkUser(authtoken) : null;
     const invite = inviteToken ? verifyInvite(inviteToken) : null;
 
-    if (!authUserId) {
-        socket.close();
-        return;
-    }
 
     // if invite exists, be sure it matches intended room on join event later
     let currentRoom = "";
@@ -132,7 +129,9 @@ wss.on('connection', (socket, req) => {
             const role = invite ? (invite.perm === "view" ? "viewer" : "editor") : "editor";
 
             const color = parsedData.color || `hsl(${Math.floor(Math.random() * 360)},70%, 60%)`;
-            currentUser = { socket, userId: authUserId || `anon_${Math.random().toString(36).slice(2, 8)}`, color, role };
+
+            const isAnonymous = !authUserId;
+            currentUser = { socket, userId: authUserId || `anon_${Math.random().toString(36).slice(2, 8)}`, color, role, isAnonymous };
 
             const roomSize = getUserCount(currentRoom);
 
@@ -230,13 +229,15 @@ wss.on('connection', (socket, req) => {
                 message: parsedData.message,
             };
 
-            await prisma.chat.create({
-                data: {
-                    roomId: Number(currentRoom),
-                    userId: currentUser.userId,
-                    message: parsedData.message
-                },
-            });
+            if (!currentUser.isAnonymous) {
+                await prisma.chat.create({
+                    data: {
+                        roomId: Number(currentRoom),
+                        userId: currentUser.userId,
+                        message: parsedData.message
+                    },
+                });
+            }
 
             broadcast(currentRoom, msg);
         }
@@ -248,7 +249,7 @@ wss.on('connection', (socket, req) => {
             console.log(`User ${currentUser.userId} disconnected from ${currentRoom}`)
             leaveRoom(currentRoom, currentUser);
             broadcast(currentRoom, {
-                type: "system",
+                type: "user_left",
                 message: `${currentUser.userId} left`,
                 users: getUserCount(currentRoom),
                 userId: currentUser.userId

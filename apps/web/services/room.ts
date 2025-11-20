@@ -39,7 +39,7 @@ export async function DeleteRoom(roomId: string) {
 }
 
 export async function ShareRoom(roomId: string) {
-    const res = await axios.post(`${BACKEND_URL}/rooms/${roomId}/share`, {
+    const res = await axios.post(`${BACKEND_URL}/rooms/${roomId}/share`, {}, {
         headers: {
             Authorization: localStorage.getItem("token"),
         }

@@ -2,8 +2,6 @@ import axios from "axios";
 import { BACKEND_URL } from "../app/config/config";
 import { LiveCursors } from "@/app/components/Canvas";
 
-
-
 type Shape = {
     type: "rect";
     x: number;
@@ -36,14 +34,6 @@ function screenToWorld(px: number, py: number, vp: Viewport) {
         y: (py - vp.offsetY) / vp.zoom
     };
 }
-
-function worldToScreen(wx: number, wy: number, vp: Viewport) {
-    return {
-        x: wx * vp.zoom + vp.offsetX,
-        y: wy * vp.zoom + vp.offsetY,
-    };
-}
-
 
 
 export function initDraw(
@@ -173,7 +163,7 @@ export function initDraw(
     }
 
     const onMouseMove = (e: MouseEvent) => {
-        if (role === "viewer") return;
+        // if (role === "viewer") return;
 
         const rect = canvas.getBoundingClientRect();
 
@@ -296,25 +286,27 @@ export function initDraw(
 
         // Draw remote cursors — world coords (read from ref)
         const live = liveCursorsRef?.current ?? {};
-        Object.entries(live).forEach(([userId, cursor]) => {
-            ctx.save();
 
-            ctx.fillStyle = cursor.color || "white";
-            ctx.strokeStyle = cursor.color || "white";
-            ctx.lineWidth = 2 / viewport.zoom;
+        if (live) {
+            Object.entries(live).forEach(([userId, cursor]) => {
+                ctx.save();
 
-            // cursor circle
-            ctx.beginPath();
-            ctx.arc(cursor.x, cursor.y, 6 / viewport.zoom, 0, Math.PI * 2);
-            ctx.fill();
+                ctx.fillStyle = cursor.color || "white";
+                ctx.strokeStyle = cursor.color || "white";
+                ctx.lineWidth = 2 / viewport.zoom;
 
-            // Username tag
-            ctx.font = `${12 / viewport.zoom}px monospace`;
-            ctx.fillStyle = "white";
-            ctx.fillText(userId, cursor.x + 8 / viewport.zoom, cursor.y - 10 / viewport.zoom);
+                // cursor circle
+                ctx.beginPath();
+                ctx.arc(cursor.x, cursor.y, 6 / viewport.zoom, 0, Math.PI * 2);
+                ctx.fill();
 
-            ctx.restore();
-        })
+                // Username tag
+                ctx.font = `${12 / viewport.zoom}px monospace`;
+                ctx.fillStyle = "white";
+                ctx.fillText(userId, cursor.x + 8 / viewport.zoom, cursor.y - 10 / viewport.zoom);
+                ctx.restore();
+            });
+        }
 
         // showing mouse pos on canvas
         ctx.save();

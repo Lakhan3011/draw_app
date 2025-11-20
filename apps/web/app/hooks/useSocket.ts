@@ -10,15 +10,30 @@ interface UseSocketParams {
 export function useSocket({ roomId, authToken, inviteToken }: UseSocketParams) {
     const [loading, setLoading] = useState(true);
     const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [role, setRole] = useState<"viewer" | "editor">("viewer");
 
     useEffect(() => {
+        if (!roomId) return;
+
         const wsURL = `${WEBSOCKET_URL}?` + `room=${roomId}` + `&token=${authToken ?? ""}` + `&invite=${inviteToken ?? ""}`;
+        console.log(wsURL);
         const ws = new WebSocket(wsURL);
 
         ws.onopen = () => {
             setLoading(false);
             setSocket(ws);
         }
+
+        ws.onmessage = (ev) => {
+            try {
+                const data = JSON.parse(ev.data);
+                if (data.type === "system" && data.role) {
+                    setRole(data.role);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
 
         ws.onclose = () => {
             setLoading(true);
@@ -30,6 +45,7 @@ export function useSocket({ roomId, authToken, inviteToken }: UseSocketParams) {
 
     return {
         loading,
-        socket
+        socket,
+        role
     }
 }

@@ -5,19 +5,18 @@ import { initDraw } from "@/draw";
 import { IconButton } from "./IconButton";
 import { Circle, HandGrab, Pencil, RectangleHorizontal } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@repo/ui/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { toast } from "@repo/ui/components/ui/sonner";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { ShareRoom } from "@/services/room";
+import { ShareModal } from "./ShareModal";
 
 type ShapeType = "rect" | "circle" | "line" | "hand";
 export type CursorData = { x: number; y: number; color: string };
 export type LiveCursors = Record<string, CursorData>;
 
-export function Canvas({ roomId, socket }: {
+export function Canvas({ roomId, socket, role }: {
     roomId: string;
-    socket: WebSocket
+    socket: WebSocket;
+    role: "editor" | "viewer";
 }) {
     const router = useRouter();
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -27,7 +26,8 @@ export function Canvas({ roomId, socket }: {
         width: 0,
         height: 0
     });
-    const [role, setRole] = useState<"viewer" | "editor">("viewer");
+
+    const authToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
 
     // React state for user count (UI overlay)
@@ -77,17 +77,15 @@ export function Canvas({ roomId, socket }: {
                     ...liveCursorsRef.current,
                     [data.userId]: { x: data.x, y: data.y, color: data.color || "#ff0" }
                 };
-            } else if (data.type === "system" || data.role) {
-                setRole(data.role);
+            } else if (data.type === "system") {
                 // optionally capture your userId/color from welcome message
                 if (data.yourUserId) myUserIdRef.current = data.yourUserId;
                 if (data.yourColor) myColorRef.current = data.yourColor;
-                if (data.userId) {
-                    // if a user left, remove them from ref
-                    const copy = { ...liveCursorsRef.current };
-                    delete copy[data.userId];
-                    liveCursorsRef.current = copy;
-                }
+            } else if (data.type === "user_left") {
+                // if a user left, remove them from ref
+                const copy = { ...liveCursorsRef.current };
+                delete copy[data.userId];
+                liveCursorsRef.current = copy;
             } else if (data.type === "room_full") {
                 toast.warning("Room is Full", {
                     description: "Redirecting to rooms...",
@@ -104,17 +102,7 @@ export function Canvas({ roomId, socket }: {
         return () => socket.removeEventListener("message", onMessage);
     }, [socket]);
 
-    // Handle socket messages for user count
-    // useEffect(() => {
-    //     const handleSocketUserCount = (event: MessageEvent) => {
-    //         const data = JSON.parse(event.data);
-    //         if (data.type === "user_count") {
-    //             setUserCount(data.count);
-    //         }
-    //     };
-    //     socket.addEventListener('message', handleSocketUserCount);
-    //     return () => socket.removeEventListener('message', handleSocketUserCount);
-    // }, [socket]);
+
 
 
     // Initailize drawing logic
@@ -125,7 +113,7 @@ export function Canvas({ roomId, socket }: {
             if (cleanup) { cleanup(); }
         };
 
-    }, [selectedTool, socket, roomId, canvasSize.width, canvasSize.height]);
+    }, [selectedTool, socket, role, roomId, canvasSize.width, canvasSize.height]);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -140,8 +128,9 @@ export function Canvas({ roomId, socket }: {
                 height={canvasSize.height}
                 className={`${selectedTool === "hand" ? 'cursor-grabbing' : 'cursor-crosshair'}`}
             />
-            <TopBar disabled={role === "viewer"} setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
-            <div className="fixed top-4 right-2 flex items-center gap-5 z-50">
+            {/* only editor see toolbar */}
+            {role === "editor" && <TopBar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />}
+            {authToken && <div className="fixed top-4 right-2 flex items-center gap-5 z-50">
                 <Button
                     variant={"ghost"}
                     onClick={() => router.push('/existing-rooms')}
@@ -150,54 +139,31 @@ export function Canvas({ roomId, socket }: {
                     variant={"destructive"}
                     onClick={handleLogout}
                 >Log Out</Button>
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button variant={"canvas"}>Share</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>Live Collaboration</DialogTitle>
-                            <DialogDescription>Invite people to collabrate on your drawing.</DialogDescription>
-                        </DialogHeader>
-                        <Button
-                            onClick={() => navigator.clipboard.writeText("Edit url")}
-                        >Edit URL</Button>
-                        <Button
-                            onClick={() => navigator.clipboard.writeText("View url")}
-                        >View URL</Button>
-                    </DialogContent>
-                </Dialog>
-            </div>
+                <ShareModal roomId={roomId} />
+            </div>}
 
             {/* Floating user count */}
-            <div className="absolute top-4 left-4 bg-gray-800/90 text-white px-4 py-2 rounded-lg text-sm shadow-md">
-                <span> 👥 {userCount} {userCount === 1 ? "user" : "users"} online </span>
+            <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-white text-sm shadow-lg pointer-events-none">
+                <span className="text-lg">👥</span>
+                <span>{userCount} {userCount === 1 ? "user" : "users"} online</span>
             </div>
 
-            {/* visual badge */}
-            {role === "viewer" && (
-                <div className="fixed top-4 left-2 px-3 py-1 bg-yellow-600 rounded text-black">
-                    View Only
-                </div>
-            )}
+
+            {/* role badge */}
+            <div className="fixed bottom-4 left-4 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium shadow-lg pointer-events-none">
+                <span className="opacity-80">Role:</span> {role}
+            </div>
         </div>
     )
 }
 
-function TopBar({ disabled, selectedTool, setSelectedTool }: {
+function TopBar({ selectedTool, setSelectedTool }: {
     selectedTool: ShapeType,
-    setSelectedTool: (s: ShapeType) => void,
-    disabled: any
+    setSelectedTool: (s: ShapeType) => void
 }) {
-
-    const handleClick = (ShapeType: any) => {
-        if (disabled) return;
-        setSelectedTool(ShapeType)
-    }
-
     return (
         <div>
-            <div className="fixed top-4 left-1/2 -translate-x-1/2  flex items-center justify-center px-4 py-2 gap-3 rounded-xl shadow-lg bg-gray-800/90 backdrop-blur-md border border-white/10 z-50">
+            <div className="fixed top-4 left-1/2 -translate-x-1/2  flex items-center justify-center px-4 py-2 gap-3 rounded-xl shadow-lg bg-white/10 backdrop-blur-md border border-white/10 z-50">
                 <IconButton
                     activated={selectedTool === "line"}
                     icon={<Pencil />}
