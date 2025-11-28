@@ -121,11 +121,11 @@ export function initDraw(
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
     const onMouseDown = (e: MouseEvent) => {
-        if (role === "viewer") return;
+        // if (role === "viewer") return;
         const rect = canvas.getBoundingClientRect();
 
         // right click - pan
-        if (e.button === 2 || e.button === 1 || e.ctrlKey || currentTool === "hand") {
+        if (e.button === 2 || e.button === 1 || e.ctrlKey || currentTool === "hand" || role === "viewer") {
             isPanning = true;
             panStart.x = e.clientX;
             panStart.y = e.clientY;
@@ -142,8 +142,6 @@ export function initDraw(
     };
 
     const onMouseUp = (e: MouseEvent) => {
-        if (role === "viewer") return;
-
         if (isPanning) {
             isPanning = false;
             return;
@@ -163,8 +161,6 @@ export function initDraw(
     }
 
     const onMouseMove = (e: MouseEvent) => {
-        // if (role === "viewer") return;
-
         const rect = canvas.getBoundingClientRect();
 
         // update mouse position (screen + world)
