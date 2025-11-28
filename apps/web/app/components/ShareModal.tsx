@@ -32,18 +32,32 @@ export function ShareModal({ roomId }: ShareModalProps) {
 
             toast.success("Share links generated!", {
                 description: "You can now share view or edit links",
+                style: {
+                    background: "green",
+                    color: "white"
+                }
             });
         },
         onError: () => {
             toast.error("Failed to generate links", {
                 description: "Please try again",
+                style: {
+                    backgroundColor: "red",
+                    color: "white"
+                }
             });
         },
     });
 
     const copy = (text: string) => {
         navigator.clipboard.writeText(text);
-        toast.success("Copied!", { description: text });
+        toast.success("Copied!", {
+            description: "Start collabrating now!!",
+            style: {
+                backgroundColor: "green",
+                color: "white"
+            }
+        });
     };
 
     return (
