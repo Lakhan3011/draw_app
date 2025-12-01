@@ -2,6 +2,7 @@ import { Button } from "@repo/ui/components/ui/button";
 import { Pencil, Users, Zap } from "lucide-react";
 import heroImage from "@/public/hero-collaboration.jpg";
 import Image from "next/image";
+import { JoinRoomModal } from "./JoinRoomModal";
 
 export const Hero = () => {
     return (
@@ -42,10 +43,7 @@ export const Hero = () => {
                                 <Pencil className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                                 Start Drawing Now
                             </Button>
-                            <Button variant="canvas" size="lg" className="group">
-                                <Users className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                Join a Room
-                            </Button>
+                            <JoinRoomModal />
                         </div>
 
                         <p className="text-sm text-muted-foreground mt-6">
